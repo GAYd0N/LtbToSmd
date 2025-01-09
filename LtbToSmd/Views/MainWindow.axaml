@@ -1,0 +1,85 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:LtbToSmd.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" 
+        x:Class="LtbToSmd.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="LtbToSmd"
+		>
+	<Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+	<Window.Height>540</Window.Height>
+	<Window.Width>960</Window.Width>
+	<Window.MinHeight>540</Window.MinHeight>
+	<Window.MinWidth>700</Window.MinWidth>
+	
+	<TabControl>
+		<TabItem Header="LTB2SMD">
+			<Grid DragDrop.AllowDrop="True">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="*"/>
+				</Grid.RowDefinitions>
+				<Border	Background="LightGray" CornerRadius="10" Margin="5" Grid.Row="0">
+					<Grid RowDefinitions="*, *" ColumnDefinitions="Auto, 6*, Auto" Margin="10">
+						<TextBlock Text="输入文件/文件夹：" Grid.Row="0" Grid.Column="0" Margin="10" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+						<TextBox Watermark="拖拽添加文件/文件夹（.LTB）" Grid.Row="0" Grid.Column="1" Margin="5"/>
+						<Button Content="浏览" Width="90" Grid.Row="0" Grid.Column="2" HorizontalContentAlignment="Center"/>
+						<TextBlock Text="输出文件夹：" Grid.Row="1" Grid.Column="0" Margin="10" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+						<TextBox Watermark="输出路径" Grid.Row="1" Grid.Column="1" Margin="5"/>
+						<Button Content="浏览" Width="90" Grid.Row="1" Grid.Column="2" HorizontalContentAlignment="Center"/>
+
+					</Grid>
+				</Border>
+				
+				<DockPanel LastChildFill="True" Grid.Row="1">
+					<Border Background="LightGray" CornerRadius="10" Margin="5">
+						<DockPanel LastChildFill="True">
+							<StackPanel Margin="20" Spacing="25">
+								<TextBlock Text="拆分手臂"		/>
+								<TextBlock Text="拆分SMD"		/>
+								<TextBlock Text="提取动画"		/>
+								<TextBlock Text="自动计算关键帧" />
+								<TextBlock Text="生成QC"			/>
+								<TextBlock Text="动画最大帧数"	/>
+
+							</StackPanel>
+							<StackPanel Margin="15" Spacing="10">
+								<ToggleSwitch IsChecked="True" />
+								<ToggleSwitch IsChecked="True" />
+								<ToggleSwitch IsChecked="True" />
+								<ToggleSwitch IsChecked="True" />
+								<ToggleSwitch IsChecked="False" />
+								<TextBox Text="255" Height="8" />
+							</StackPanel>
+						</DockPanel>
+					</Border>
+					<Border Background="LightGray" CornerRadius="10" Margin="5">
+						<Grid RowDefinitions="*, Auto" Margin="5">
+							<TextBox Watermark="输出日志" IsReadOnly="True" TextWrapping="Wrap" Margin="10"/>
+							<Button Grid.Row="1" FontSize="15" Height="50" Width="150" Content="转换LTB并保存" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="10 5 10 10"/>
+
+						</Grid>
+					</Border>
+				</DockPanel>
+			
+			</Grid>
+
+		</TabItem>
+
+		<TabItem Header="DTX2PNG">
+				<TextBlock Text="WIP" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="100"/>
+		</TabItem>
+		<TabItem Header="关于">
+			
+		</TabItem>
+		
+		
+	</TabControl>
+</Window>
