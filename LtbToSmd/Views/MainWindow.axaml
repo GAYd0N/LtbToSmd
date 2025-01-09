@@ -30,7 +30,7 @@
 					<Grid RowDefinitions="*, *" ColumnDefinitions="Auto, 6*, Auto" Margin="10">
 						<TextBlock Text="输入文件/文件夹：" Grid.Row="0" Grid.Column="0" Margin="10" HorizontalAlignment="Right" VerticalAlignment="Center"/>
 						<TextBox Watermark="拖拽添加文件/文件夹（.LTB）" Grid.Row="0" Grid.Column="1" Margin="5"/>
-						<Button Content="浏览" Width="150" Grid.Row="0" Grid.Column="2" HorizontalContentAlignment="Center"/>
+						<Button Content="浏览" Command="{Binding OpenFileCommand}" Width="150" Grid.Row="0" Grid.Column="2" HorizontalContentAlignment="Center"/>
 						<TextBlock Text="输出文件夹：" Grid.Row="1" Grid.Column="0" Margin="10" HorizontalAlignment="Right" VerticalAlignment="Center"/>
 						<TextBox Watermark="输出路径" Grid.Row="1" Grid.Column="1" Margin="5"/>
 						<Button Content="浏览" Width="150" Grid.Row="1" Grid.Column="2" HorizontalContentAlignment="Center"/>
@@ -81,10 +81,10 @@
 		</TabItem>
 
 		<TabItem Header="DTX2PNG">
-				<TextBlock Text="WIP" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="100"/>
+			<TextBlock Text="WIP" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="100"/>
 		</TabItem>
 		<TabItem Header="关于">
-			
+			<TextBlock Text="WIP" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="100"/>
 		</TabItem>
 		
 		

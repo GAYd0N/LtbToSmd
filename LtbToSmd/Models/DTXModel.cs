@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LtbToSmd.Models
 {
-    internal class Ltb2SmdModel
+    public class DtxModel
     {
     }
 }
