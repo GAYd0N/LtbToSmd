@@ -30,35 +30,42 @@
 					<Grid RowDefinitions="*, *" ColumnDefinitions="Auto, 6*, Auto" Margin="10">
 						<TextBlock Text="输入文件/文件夹：" Grid.Row="0" Grid.Column="0" Margin="10" HorizontalAlignment="Right" VerticalAlignment="Center"/>
 						<TextBox Watermark="拖拽添加文件/文件夹（.LTB）" Grid.Row="0" Grid.Column="1" Margin="5"/>
-						<Button Content="浏览" Width="90" Grid.Row="0" Grid.Column="2" HorizontalContentAlignment="Center"/>
+						<Button Content="浏览" Width="150" Grid.Row="0" Grid.Column="2" HorizontalContentAlignment="Center"/>
 						<TextBlock Text="输出文件夹：" Grid.Row="1" Grid.Column="0" Margin="10" HorizontalAlignment="Right" VerticalAlignment="Center"/>
 						<TextBox Watermark="输出路径" Grid.Row="1" Grid.Column="1" Margin="5"/>
-						<Button Content="浏览" Width="90" Grid.Row="1" Grid.Column="2" HorizontalContentAlignment="Center"/>
+						<Button Content="浏览" Width="150" Grid.Row="1" Grid.Column="2" HorizontalContentAlignment="Center"/>
 
 					</Grid>
 				</Border>
 				
 				<DockPanel LastChildFill="True" Grid.Row="1">
 					<Border Background="LightGray" CornerRadius="10" Margin="5">
-						<DockPanel LastChildFill="True">
-							<StackPanel Margin="20" Spacing="25">
-								<TextBlock Text="拆分手臂"		/>
-								<TextBlock Text="拆分SMD"		/>
-								<TextBlock Text="提取动画"		/>
-								<TextBlock Text="自动计算关键帧" />
-								<TextBlock Text="生成QC"			/>
-								<TextBlock Text="动画最大帧数"	/>
-
-							</StackPanel>
-							<StackPanel Margin="15" Spacing="10">
-								<ToggleSwitch IsChecked="True" />
-								<ToggleSwitch IsChecked="True" />
-								<ToggleSwitch IsChecked="True" />
-								<ToggleSwitch IsChecked="True" />
-								<ToggleSwitch IsChecked="False" />
-								<TextBox Text="255" Height="8" />
-							</StackPanel>
-						</DockPanel>
+						<StackPanel Margin="10 0">
+							<DockPanel>
+								<TextBlock Text="拆分手臂" DockPanel.Dock="Left" Margin="10" VerticalAlignment="Center"/>
+								<ToggleSwitch DockPanel.Dock="Right" Margin="10" HorizontalAlignment="Right"/>
+							</DockPanel>
+							<DockPanel>
+								<TextBlock Text="拆分SMD" DockPanel.Dock="Left" Margin="10" VerticalAlignment="Center"/>
+								<ToggleSwitch DockPanel.Dock="Right" Margin="10" HorizontalAlignment="Right"/>
+							</DockPanel>
+							<DockPanel>
+								<TextBlock Text="提取动画" DockPanel.Dock="Left" Margin="10" VerticalAlignment="Center"/>
+								<ToggleSwitch DockPanel.Dock="Right" Margin="10" HorizontalAlignment="Right"/>
+							</DockPanel>
+							<DockPanel>
+								<TextBlock Text="自动计算关键帧" DockPanel.Dock="Left" Margin="10" VerticalAlignment="Center"/>
+								<ToggleSwitch DockPanel.Dock="Right" Margin="10" HorizontalAlignment="Right"/>
+							</DockPanel>
+							<DockPanel>
+								<TextBlock Text="生成QC" DockPanel.Dock="Left" Margin="10" VerticalAlignment="Center"/>
+								<ToggleSwitch DockPanel.Dock="Right" Margin="10" HorizontalAlignment="Right"/>
+							</DockPanel>
+							<DockPanel>
+								<TextBlock Text="动画最大帧数" DockPanel.Dock="Left" Margin="10" VerticalAlignment="Center"/>
+								<TextBox Text="256" DockPanel.Dock="Right" Margin="10"  HorizontalAlignment="Center"/>
+							</DockPanel>
+						</StackPanel>
 					</Border>
 					<Border Background="LightGray" CornerRadius="10" Margin="5">
 						<Grid RowDefinitions="*, Auto" Margin="5">
