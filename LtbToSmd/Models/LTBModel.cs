@@ -3,20 +3,27 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using SevenZip.Compression.LZMA;
+using LtbToSmd.ViewModels;
 
 namespace LtbToSmd.Models
 {
 
     public class LtbModel
     {
-        
-        public LtbModel()
+        private MainWindowViewModel _MainWindowViewModel;
+
+        public LtbModel(MainWindowViewModel vm)
         {
             _InputFiles = new List<string>();
+            _MainWindowViewModel = vm;
             CultureInfo culture = (CultureInfo)CultureInfo.CurrentCulture.Clone();
+
+
         }
 
         public IReadOnlyList<string> inputFiles => _InputFiles.AsReadOnly();
+        public IReadOnlyList<string> inputFileList => _InputFileList.AsReadOnly();
+
 
         public void AddInputFile(string file)
         {
@@ -26,13 +33,18 @@ namespace LtbToSmd.Models
             }
         }
 
+        private void AppendLog(string log)
+        {
+            _MainWindowViewModel.AppendLog(log);
+        }
+
         public void ClearInputFiles()
         {
             _InputFiles.Clear();
         }
 
         
-        public void ConvertToSmd(string file)
+        private void ConvertToSmd(string file)
         {
             totalmesh = 0;
             is__doing = true;
@@ -424,7 +436,7 @@ namespace LtbToSmd.Models
             return localMatrix;
         }
 
-        static double[,] InverseMat2(double[,] m)
+        private double[,] InverseMat2(double[,] m)
         {
             double[,] invOut = new double[4, 4];
             double[,] inv = new double[4, 4];
@@ -1175,7 +1187,7 @@ namespace LtbToSmd.Models
             }
             return boneWeight;
         }
-        public bool Decompress_file(string inFile, string outFile)
+        private bool Decompress_file(string inFile, string outFile)
         {
             try
             {
@@ -1242,14 +1254,14 @@ namespace LtbToSmd.Models
 
         private string cur_fName = "", cur_Path = "";
         private static List<double[,]> Matrix4x4s = new List<double[,]>();
-        private CultureInfo culture;
+        private CultureInfo? culture;
 
         private BinaryReader? _LTBFile;
         private List<CMeshData>? _MeshData;
         private List<CBoneData>? _BoneData;
         private List<CAnimData>? _AnimData;
-        public List<string>? _InputFiles;
-
+        private List<string>? _InputFiles;
+        private List<string>? _InputFileList;
         enum LTBMeshType
         {
             LTB_MESHTYPE_NOTSKINNED = 1,

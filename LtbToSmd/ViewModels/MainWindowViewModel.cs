@@ -13,17 +13,28 @@ using System.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LtbToSmd.IoCFileOps.Services;
 using Microsoft.Extensions.DependencyInjection;
+using System.ComponentModel;
 
 namespace LtbToSmd.ViewModels
 {
     public partial class MainWindowViewModel : ViewModelBase
     {
         private LtbModel _ltbModel;
-        [ObservableProperty] private string? _fileText;
-
         public MainWindowViewModel()
         {
-            _ltbModel = new LtbModel();
+            _ltbModel = new LtbModel(this);
+            AppendLog("Welcome to LTB to SMD converter.");
+        }
+
+        [ObservableProperty]
+        public string? _fileText;
+
+        [ObservableProperty]
+        public string? _logText;
+
+        public void AppendLog(string log)
+        {
+          LogText += "[" + DateTime.Now.ToString("HH:mm:FF") + "]" + log + Environment.NewLine;
         }
 
         [RelayCommand]
@@ -38,6 +49,10 @@ namespace LtbToSmd.ViewModels
                 var file = await filesService.OpenFileAsync();
                 if (file is null) return;
 
+                foreach (var item in file.GetBasicPropertiesAsync().GetType().Name)
+                {
+                    
+                }
 
                 await using var readStream = await file.OpenReadAsync();
                 using var reader = new StreamReader(readStream);
