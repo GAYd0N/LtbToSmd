@@ -7,10 +7,7 @@ namespace LtbToSmd.ViewModels
     {
         protected ViewModelBase()
         {
-            ErrorMessages = new ObservableCollection<string>();
         }
 
-        [ObservableProperty]
-        private ObservableCollection<string>? _errorMessages;
     }
 }

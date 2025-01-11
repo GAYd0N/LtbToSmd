@@ -17,13 +17,7 @@ namespace LtbToSmd.Models
             _InputFiles = new List<string>();
             _MainWindowViewModel = vm;
             CultureInfo culture = (CultureInfo)CultureInfo.CurrentCulture.Clone();
-
-
         }
-
-        public IReadOnlyList<string> inputFiles => _InputFiles.AsReadOnly();
-        public IReadOnlyList<string> inputFileList => _InputFileList.AsReadOnly();
-
 
         public void AddInputFile(string file)
         {
@@ -35,7 +29,7 @@ namespace LtbToSmd.Models
 
         private void AppendLog(string log)
         {
-            _MainWindowViewModel.AppendLog(log);
+            _MainWindowViewModel.AddLog(log);
         }
 
         public void ClearInputFiles()
