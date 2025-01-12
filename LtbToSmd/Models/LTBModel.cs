@@ -4,68 +4,89 @@ using System.Globalization;
 using System.IO;
 using SevenZip.Compression.LZMA;
 using LtbToSmd.ViewModels;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace LtbToSmd.Models
 {
 
     public class LtbModel
     {
-        private MainWindowViewModel _MainWindowViewModel;
+        private MainWindowViewModel m_MainWindowViewModel;
 
         public LtbModel(MainWindowViewModel vm)
         {
-            _InputFiles = new List<string>();
-            _MainWindowViewModel = vm;
+            m_InputFiles = new List<string>();
+            m_Matrix4x4s =  new List<double[,]>();
+            m_MainWindowViewModel = vm;
             CultureInfo culture = (CultureInfo)CultureInfo.CurrentCulture.Clone();
+        }
+
+        private MainWindowViewModel GetVM()
+        {
+            return m_MainWindowViewModel;
         }
 
         public void AddInputFile(string file)
         {
-            if (_InputFiles != null)
+            if (m_InputFiles != null)
             {
-                _InputFiles.Add(file);
+                m_InputFiles.Add(file);
             }
         }
 
-        private void AppendLog(string log)
+        private void PrintLog(string log)
         {
-            _MainWindowViewModel.AddLog(log);
+            GetVM().PrintLog(log);
         }
 
         public void ClearInputFiles()
         {
-            _InputFiles.Clear();
+            m_InputFiles.Clear();
         }
 
         
-        private void ConvertToSmd(string file)
+        public void ConvertToSmd(string file, CancellationToken token)
         {
             totalmesh = 0;
-            is__doing = true;
+            IsConverting = true;
             // richTextBox1.AppendText("\n");
             int pos_ext = file.LastIndexOf(".");
             int pos_Path = file.LastIndexOf("\\");
             string fname = file.Substring(pos_Path + 1, pos_ext - pos_Path - 1);
-            string gPath = file.Substring(0, pos_Path + 1);
+            string gPath;
+            string cur_fPath = m_InputPath;
+            if (IsCreateSeparateFolderEnabled == true)
+            {
+                gPath = m_OutputPath + "\\" + fname + "\\";
+                if (!Directory.Exists(gPath))
+                {
+                    Directory.CreateDirectory(gPath);
+                }
+            }
+            else
+            {
+                gPath = m_InputPath;
+
+            }
 
             cur_fName = fname;
-            cur_Path = gPath;
             // richTextBox1.AppendText("[+] Path:" + gPath + "\n");
             // richTextBox1.AppendText("[+] file:" + fname + ".ltb\n");
 
-            FileStream fileStream = new FileStream(file, FileMode.Open);
-            _LTBFile = new BinaryReader(fileStream);
+            FileStream fileStream = new FileStream(cur_fPath, FileMode.Open);
+            m_LTBFile = new BinaryReader(fileStream);
             // 从文件中读取数据
-            // richTextBox1.AppendText("[+] Lấy dữ liệu trong file:" + fname + ".ltb\n");
+            PrintLog("Read data from the file:" + fname + ".ltb\n");
 
-            int Check_header = _LTBFile.ReadUInt16(); _LTBFile.ReadUInt16();
-            _LTBFile.ReadUInt32(); _LTBFile.ReadUInt32(); _LTBFile.ReadUInt32(); _LTBFile.ReadUInt32();
+            int Check_header = m_LTBFile.ReadUInt16(); m_LTBFile.ReadUInt16();
+            m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32();
             // 检查文件类型
-            //richTextBox1.AppendText("[+] Kiểm tra kiểu file\n");
+            PrintLog("Check file type\n");
             Boolean is_tmp = false;
             if (Check_header > 20)
             {
-                _LTBFile.Close();
+                m_LTBFile.Close();
                 //LZMA压缩文件
                 //richTextBox1.AppendText("   [!] File pack lmza\n");
                 //进行解压缩
@@ -75,66 +96,86 @@ namespace LtbToSmd.Models
                 //重新读取文件
                 //richTextBox1.AppendText("[+] Tiến hành đọc lại file\n");
                 fileStream = new FileStream("___tmp.tmp", FileMode.Open);
-                _LTBFile = new BinaryReader(fileStream);
+                m_LTBFile = new BinaryReader(fileStream);
 
-                _LTBFile.ReadUInt16(); _LTBFile.ReadUInt16();
-                _LTBFile.ReadUInt32(); _LTBFile.ReadUInt32(); _LTBFile.ReadUInt32(); _LTBFile.ReadUInt32();
+                m_LTBFile.ReadUInt16(); m_LTBFile.ReadUInt16();
+                m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32();
 
             }
-            UInt32 version = _LTBFile.ReadUInt32();
+            UInt32 version = m_LTBFile.ReadUInt32();
 
-            _LTBFile.ReadUInt32(); _LTBFile.ReadUInt32();
-            numBones = _LTBFile.ReadUInt32();
-            _LTBFile.ReadUInt32(); _LTBFile.ReadUInt32(); _LTBFile.ReadUInt32(); _LTBFile.ReadUInt32(); _LTBFile.ReadUInt32(); _LTBFile.ReadUInt32(); _LTBFile.ReadUInt32(); _LTBFile.ReadUInt32(); _LTBFile.ReadUInt32(); _LTBFile.ReadUInt32();
-            _LTBFile.ReadUInt16(); _LTBFile.ReadUInt16();
-            _LTBFile.ReadUInt32();
-            _LTBFile.ReadBytes(_LTBFile.ReadUInt16());
-            _LTBFile.ReadSingle();
-            _LTBFile.ReadUInt32();
-            numMesh = _LTBFile.ReadUInt32();
+            m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32();
+            numBones = m_LTBFile.ReadUInt32();
+            m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32();
+            m_LTBFile.ReadUInt16(); m_LTBFile.ReadUInt16();
+            m_LTBFile.ReadUInt32();
+            m_LTBFile.ReadBytes(m_LTBFile.ReadUInt16());
+            m_LTBFile.ReadSingle();
+            m_LTBFile.ReadUInt32();
+            numMesh = m_LTBFile.ReadUInt32();
             // version文件版本
-            //richTextBox1.AppendText("     - File version:" + version + "\n");
+            PrintLog("File version:" + version + "\n");
             // 初始化存储变量
-            //richTextBox1.AppendText("     - Khởi tạo biến lưu trữ\n");
+            PrintLog("Initialize the storage variable\n");
 
-            _MeshData = new List<CMeshData>();
-            _BoneData = new List<CBoneData>();
+            m_MeshData = new CMeshData[256];
+            m_BoneData = new CBoneData[numBones];
+
+            // 检查是否取消
+            if (token.IsCancellationRequested)
+            {
+                PrintLog("Cancellation detected. Exiting...");
+                token.ThrowIfCancellationRequested(); // 抛出 OperationCanceledException
+            }
+
             //提取基础数据
-            //richTextBox1.AppendText("     - Lấy dữ liệu cơ sở\n");
-            Parse_mesh(_LTBFile, numMesh);
+            PrintLog("Extract basic data");
+            Parse_mesh(m_LTBFile, numMesh);
             numMesh = totalmesh;
-            if (is__doing == false)
+            if (IsConverting == false)
             {
                 //过程失败 [不支持此文件类型]
                 //richTextBox1.AppendText("     - Quá trình thất bại [Chư hỗ trợ kiểu file này] \n");
-                _LTBFile.Close();
+                m_LTBFile.Close();
                 return;
             }
             Calc_weightsets();
-            parse_skeleton(_LTBFile);
+            parse_skeleton(m_LTBFile);
+
+            if (token.IsCancellationRequested)
+            {
+                PrintLog("Cancellation detected. Exiting...");
+                token.ThrowIfCancellationRequested(); // 抛出 OperationCanceledException
+            }
             //基础计算
-            //richTextBox1.AppendText("     - Tính toán cơ sở\n");
+            PrintLog("Basic calculation\n");
             Clac_Par_Bone();
 
-            if (isCheckboxAnim == true)
+            if (IsExtractAnimEnabled == true)
             {
                 //检查动画
-                //richTextBox1.AppendText("     - Kiểm tra anim\n");
-                if (_LTBFile.BaseStream.Length - _LTBFile.BaseStream.Position < 2048) isAnim = false;
-                else isAnim = true;
+                PrintLog("Check the animation\n");
+                if (m_LTBFile.BaseStream.Length - m_LTBFile.BaseStream.Position < 2048) IsAnim = false;
+                else IsAnim = true;
                 //  isAnim = false;
-                if (isAnim == true)
+                if (IsAnim == true)
                 {
                     //提取动画数据
                     //richTextBox1.AppendText("           + Lấy dữ liệu về anim\n");
-                    Parse_animation(_LTBFile);
+                    Parse_animation(m_LTBFile);
                     //有N个动画
                     //richTextBox1.AppendText("               * Có " + numAnim + " anim\n");
                 }
                 //else //无法从此文件中提取动画
                 //    richTextBox1.AppendText("           + Không lấy được anim trong file này\n");
             }
-            else isAnim = false;
+            else IsAnim = false;
+
+            if (token.IsCancellationRequested)
+            {
+                PrintLog("Cancellation detected. Exiting...");
+                token.ThrowIfCancellationRequested(); // 抛出 OperationCanceledException
+            }
             //将网格写入文件
             //richTextBox1.AppendText("[+] Ghi mesh vào file:" + fname + ".smd\n");
             //  Scale_();
@@ -142,14 +183,14 @@ namespace LtbToSmd.Models
             //  get_new_bone_out_data(0, 0, 1.0f,1.0f,0.65f);
             //   Change_a_anim(1.0f, 1.0f, 0.65f);
             Write_SMD_MODEL(gPath + fname);
-            if (isAnim == true)
+            if (IsAnim == true)
                 for (int i = 0; i < numAnim; i++)
                 {
                     //将动画写入文件
                     //richTextBox1.AppendText("[+] Ghi Anim " + _AnimData[i].name + " vào file:" + _AnimData[i].name + ".smd\n");
-                    Write_SMD_ANIM(i, gPath + _AnimData[i].name + ".smd");
+                    Write_SMD_ANIM(i, gPath + m_AnimData[i].name + ".smd");
                 }
-            if (isAutoCreateQC == true && isAnim == true)
+            if (IsGenerateQCEnabled == true && IsAnim == true)
             {
                 //创建QC文件
                 //richTextBox1.AppendText("[+] Tạo file QC file:" + fname + ".qc\n");
@@ -157,8 +198,9 @@ namespace LtbToSmd.Models
             }
             //转换完成
             //richTextBox1.AppendText("Hoàn thành!! Bạn có thể kéo lên để xem lại thông báo của quá trình\n");
-            _LTBFile.Close();
+            m_LTBFile.Close();
             if (is_tmp == true) File.Delete("___tmp.tmp");
+
 
         }
 
@@ -168,19 +210,19 @@ namespace LtbToSmd.Models
             for (int i = 0; i < numMesh; i++)
             {
 
-                if (_MeshData[i].weightsets.Count > 1)
+                if (m_MeshData[i].weightsets.Count > 1)
                 {
                     int pWeightset = 0;
-                    for (int j = 0; j < _MeshData[i].weightsets.Count; j++)
+                    for (int j = 0; j < m_MeshData[i].weightsets.Count; j++)
                     {
                         int[] intWeightSet = new int[5];
 
                         int num = 0;
                         for (int n = 0; n < 4; n++)
                         {
-                            if (_MeshData[i].weightsets[j][2 + n] > -1)
+                            if (m_MeshData[i].weightsets[j][2 + n] > -1)
                             {
-                                intWeightSet[n + 1] = _MeshData[i].weightsets[j][2 + n];
+                                intWeightSet[n + 1] = m_MeshData[i].weightsets[j][2 + n];
                                 num += 1;
 
                             }
@@ -189,17 +231,17 @@ namespace LtbToSmd.Models
                         }
                         intWeightSet[0] = num;
 
-                        for (int k = 0; k < _MeshData[i].weightsets[j][1]; k++)
+                        for (int k = 0; k < m_MeshData[i].weightsets[j][1]; k++)
                         {
                             float[] WeightsetSize = new float[7];
-                            if (_MeshData[i].weights.Count > 0)
+                            if (m_MeshData[i].weights.Count > 0)
                             {
-                                WeightsetSize = _MeshData[i].weights[pWeightset];
+                                WeightsetSize = m_MeshData[i].weights[pWeightset];
 
                                 int outw = GetBoneWeightD(intWeightSet, WeightsetSize);
-                                _MeshData[i].weightsets_output.Add(outw);
+                                m_MeshData[i].weightsets_output.Add(outw);
                             }
-                            else _MeshData[i].weightsets_output.Add(_MeshData[i].weightsets[j][2]);
+                            else m_MeshData[i].weightsets_output.Add(m_MeshData[i].weightsets[j][2]);
 
                             pWeightset += 1;
                         }
@@ -207,8 +249,8 @@ namespace LtbToSmd.Models
                 }
                 else
                 {
-                    for (int j = 0; j < _MeshData[i].nvertices; j++)
-                        _MeshData[i].weightsets_output.Add(_MeshData[i].weightsets[0][0]);
+                    for (int j = 0; j < m_MeshData[i].nvertices; j++)
+                        m_MeshData[i].weightsets_output.Add(m_MeshData[i].weightsets[0][0]);
                 }
             }
             // weightsets_output
@@ -275,12 +317,12 @@ namespace LtbToSmd.Models
 
         private void auto_calc_all_Frame(int indexanim)
         {
-            if (isSubForm == false) return;
-            scale_(indexanim, Scaleto);
+            if (IsSubForm == false) return;
+            //scale_(indexanim, Scaleto);
 
-            if (isCalcframe == false) return;
-            List<int> glistkeyframe = _AnimData[indexanim].listkeyframe;
-            CFramedata[] frame = _AnimData[indexanim].frame;
+            if (IsCalcKeyFramesEnabled == false) return;
+            List<int> glistkeyframe = m_AnimData[indexanim].listkeyframe;
+            CFramedata[] frame = m_AnimData[indexanim].frame;
             List<int> newlistframe = new List<int>();
             CFramedata[] newframe = new CFramedata[numBones];
 
@@ -292,7 +334,7 @@ namespace LtbToSmd.Models
             }
             for (int j = 0; j < glistkeyframe[glistkeyframe.Count - 1]; j++)
                 newlistframe.Add(j);
-            for (int i = 1; i < _AnimData[indexanim].nkeyframe; i++)
+            for (int i = 1; i < m_AnimData[indexanim].nkeyframe; i++)
             {
                 for (int j = 0; j < numBones; j++)
                 {
@@ -334,29 +376,29 @@ namespace LtbToSmd.Models
                 }
 
             }
-            _AnimData[indexanim].listkeyframe.Clear();
-            _AnimData[indexanim].listkeyframe = newlistframe;
-            _AnimData[indexanim].nkeyframe = Convert.ToUInt32(newlistframe.Count);
-            _AnimData[indexanim].frame = newframe;
+            m_AnimData[indexanim].listkeyframe.Clear();
+            m_AnimData[indexanim].listkeyframe = newlistframe;
+            m_AnimData[indexanim].nkeyframe = Convert.ToUInt32(newlistframe.Count);
+            m_AnimData[indexanim].frame = newframe;
         }
 
-        private void scale_(int indexanim, float sizemax)
-        {
-            float nfScale = 1.0f;
+        //private void scale_(int indexanim, float sizemax)
+        //{
+        //    float nfScale = 1.0f;
 
-            float maxframe = (float)_AnimData[indexanim].listkeyframe[(int)_AnimData[indexanim].nkeyframe - 1];
-            if (maxframe > sizemax && isAutoScaler == true)
-                nfScale = maxframe / sizemax;
-            for (int i = 0; i < _AnimData[indexanim].nkeyframe; i++)
-            {
-                float giTime = (float)_AnimData[indexanim].listkeyframe[i] / nfScale;
-                if (float.IsNaN(giTime)) giTime = 0.0f;
-                _AnimData[indexanim].listkeyframe[i] = (int)Math.Round(giTime);
+        //    float maxframe = (float)_AnimData[indexanim].listkeyframe[(int)_AnimData[indexanim].nkeyframe - 1];
+        //    if (maxframe > sizemax && isAutoScaler == true)
+        //        nfScale = maxframe / sizemax;
+        //    for (int i = 0; i < _AnimData[indexanim].nkeyframe; i++)
+        //    {
+        //        float giTime = (float)_AnimData[indexanim].listkeyframe[i] / nfScale;
+        //        if (float.IsNaN(giTime)) giTime = 0.0f;
+        //        _AnimData[indexanim].listkeyframe[i] = (int)Math.Round(giTime);
 
-            }
-            return;
+        //    }
+        //    return;
 
-        }
+        //}
 
         private double[] rotationMatrixToEulerAngles(double[,] matrix)
         {
@@ -547,19 +589,19 @@ namespace LtbToSmd.Models
 
         private void calc_databone()
         {
-            Matrix4x4s.Clear();
+            m_Matrix4x4s?.Clear();
             for (int i = 0; i < numBones; i++)
             {
                 double[,] Matrix4x4 = new double[4, 4];
                 for (int k = 0; k < 4; k++)
                 {
-                    Matrix4x4[k, 0] = _BoneData[i].matdata[k, 0];
-                    Matrix4x4[k, 1] = _BoneData[i].matdata[k, 1];
-                    Matrix4x4[k, 2] = _BoneData[i].matdata[k, 2];
-                    Matrix4x4[k, 3] = _BoneData[i].matdata[k, 3];
+                    Matrix4x4[k, 0] = m_BoneData[i].matdata[k, 0];
+                    Matrix4x4[k, 1] = m_BoneData[i].matdata[k, 1];
+                    Matrix4x4[k, 2] = m_BoneData[i].matdata[k, 2];
+                    Matrix4x4[k, 3] = m_BoneData[i].matdata[k, 3];
                 }
-                Matrix4x4s.Add(Matrix4x4);
-                double[,] localMatrix = worldToLocalMatrix(Matrix4x4, _BoneData[i].par, Matrix4x4s);
+                m_Matrix4x4s?.Add(Matrix4x4);
+                double[,] localMatrix = worldToLocalMatrix(Matrix4x4, m_BoneData[i].par, m_Matrix4x4s);
                 double[] quaternion = new double[3];
                 double[] rotation = new double[3];
                 quaternion = GetRotation(localMatrix);
@@ -568,22 +610,22 @@ namespace LtbToSmd.Models
                 //rotation = QuaternionToYawPitchRoll(quaternion);
                 double[] position = new double[3];
                 position = GetPosition(localMatrix);
-                _BoneData[i].bone_data_out = position[0].ToString("F6", culture) + " " + position[1].ToString("F6", culture) + " " + position[2].ToString("F6", culture) + " " + rotation[0].ToString("F6", culture) + " " + rotation[1].ToString("F6", culture) + " " + rotation[2].ToString("F6", culture);
+                m_BoneData[i].bone_data_out = position[0].ToString("F6", culture) + " " + position[1].ToString("F6", culture) + " " + position[2].ToString("F6", culture) + " " + rotation[0].ToString("F6", culture) + " " + rotation[1].ToString("F6", culture) + " " + rotation[2].ToString("F6", culture);
             }
         }
         private void Clac_Par_Bone()
         {
             uint[] nsubone = new uint[numBones];
-            nsubone[0] = _BoneData[0].nSubbone;
-            _BoneData[0].par = -1;
+            nsubone[0] = m_BoneData[0].nSubbone;
+            m_BoneData[0].par = -1;
             for (int i = 1; i < numBones; i++)
             {
-                nsubone[i] = _BoneData[i].nSubbone;
+                nsubone[i] = m_BoneData[i].nSubbone;
                 for (int j = i - 1; j >= 0; j--)
                     if (nsubone[j] > 0)
                     {
                         nsubone[j] -= 1;
-                        _BoneData[i].par = j;
+                        m_BoneData[i].par = j;
                         break;
                     }
             }
@@ -621,7 +663,7 @@ namespace LtbToSmd.Models
             text_file = new StreamWriter(text_filetr);
             for (int i = 0; i < numMesh; i++)
             {
-                text_file.WriteLine(_MeshData[i].name.Replace(" ", "_") + ".bmp\n");
+                text_file.WriteLine(m_MeshData[i].name.Replace(" ", "_") + ".bmp\n");
             }
             text_file.Close();
         }
@@ -631,13 +673,9 @@ namespace LtbToSmd.Models
             StreamWriter qcfile;
             FileStream QCStr = new FileStream(tofile, FileMode.Create, FileAccess.Write);
             qcfile = new StreamWriter(QCStr);
-            qcfile.WriteLine("/*");
-            qcfile.WriteLine("File QC - Duoc tao boi tools Convert LTB to SMD <Author:Giay Nhap>");
-            qcfile.WriteLine("Fb:fb.com\\abcGiayNhapcba");
-            qcfile.WriteLine("*/");
-            qcfile.WriteLine("");
+            qcfile.WriteLine("//Created by LtbToSmd");
             qcfile.WriteLine("$modelname \"" + modelname + ".mdl\"");
-            qcfile.WriteLine("$cd \"" + cur_Path + "\\\"");
+            qcfile.WriteLine("$cd \".\"");
             qcfile.WriteLine("$cdtexture \".\\\"");
             qcfile.WriteLine("$scale 1.0");
             qcfile.WriteLine("$cliptotextures");
@@ -653,8 +691,8 @@ namespace LtbToSmd.Models
             qcfile.WriteLine("");
             for (int i = 0; i < numAnim; i++)
             {
-                qcfile.Write("$sequence \"" + _AnimData[i].name + "\" \"" + _AnimData[i].name + "\" fps " + _AnimData[i].listkeyframe[(int)_AnimData[i].nkeyframe - 1]);
-                if (_AnimData[i].name.IndexOf("idle") != -1 || _AnimData[i].name.IndexOf("run") != -1) qcfile.WriteLine(" loop");
+                qcfile.Write("$sequence \"" + m_AnimData[i].name + "\" \"" + m_AnimData[i].name + "\" fps " + m_AnimData[i].listkeyframe[(int)m_AnimData[i].nkeyframe - 1]);
+                if (m_AnimData[i].name.IndexOf("idle") != -1 || m_AnimData[i].name.IndexOf("run") != -1) qcfile.WriteLine(" loop");
                 else qcfile.WriteLine("");
             }
 
@@ -675,7 +713,7 @@ namespace LtbToSmd.Models
             for (int i = 0; i < numMesh; i++)
             {
 
-                if (i == 2 && is_slp_hand == true)
+                if (i == 2 && IsSeparateArmEnabled == true)
                 {
                     smd.WriteLine("end");
                     smd.WriteLine("");
@@ -686,9 +724,9 @@ namespace LtbToSmd.Models
                     num_f_brak += 1;
                 }
 
-                for (int j = 0; j < _MeshData[i].nIdx; j += 3)
+                for (int j = 0; j < m_MeshData[i].nIdx; j += 3)
                 {
-                    if (is_spl_model == true)
+                    if (IsSeparateSmdEnabled == true)
                     {
                         if ((j - had_poly + 3) / 3 > MAXSTUDIOVERTS)
                         {
@@ -702,16 +740,16 @@ namespace LtbToSmd.Models
                             num_f_brak += 1;
                         }
                     }
-                    int tr = _MeshData[i].triangles[j];
-                    int tr1 = _MeshData[i].triangles[j + 1];
-                    int tr2 = _MeshData[i].triangles[j + 2];
-                    smd.WriteLine(_MeshData[i].name.Replace(" ", "_") + ".bmp");
-                    smd.WriteLine(_MeshData[i].weightsets_output[tr] + " " + _MeshData[i].vertices[tr][0].ToString("F6", culture) + " " + _MeshData[i].vertices[tr][1].ToString("F6", culture) + " " + _MeshData[i].vertices[tr][2].ToString("F6", culture) + " "
-                    + _MeshData[i].normals[tr][0].ToString("F6", culture) + " " + _MeshData[i].normals[tr][1].ToString("F6", culture) + " " + _MeshData[i].normals[tr][2].ToString("F6", culture) + " " + _MeshData[i].uvs[tr][0].ToString("F6", culture) + " " + _MeshData[i].uvs[tr][1].ToString("F6", culture));
-                    smd.WriteLine(_MeshData[i].weightsets_output[tr1] + " " + _MeshData[i].vertices[tr1][0].ToString("F6", culture) + " " + _MeshData[i].vertices[tr1][1].ToString("F6", culture) + " " + _MeshData[i].vertices[tr1][2].ToString("F6", culture) + " "
-                   + _MeshData[i].normals[tr1][0].ToString("F6", culture) + " " + _MeshData[i].normals[tr1][1].ToString("F6", culture) + " " + _MeshData[i].normals[tr1][2].ToString("F6", culture) + " " + _MeshData[i].uvs[tr1][0].ToString("F6", culture) + " " + _MeshData[i].uvs[tr1][1].ToString("F6", culture));
-                    smd.WriteLine(_MeshData[i].weightsets_output[tr2] + " " + _MeshData[i].vertices[tr2][0].ToString("F6", culture) + " " + _MeshData[i].vertices[tr2][1].ToString("F6", culture) + " " + _MeshData[i].vertices[tr2][2].ToString("F6", culture) + " "
-                   + _MeshData[i].normals[tr2][0].ToString("F6", culture) + " " + _MeshData[i].normals[tr2][1].ToString("F6", culture) + " " + _MeshData[i].normals[tr2][2].ToString("F6", culture) + " " + _MeshData[i].uvs[tr2][0].ToString("F6", culture) + " " + _MeshData[i].uvs[tr2][1].ToString("F6", culture));
+                    int tr = m_MeshData[i].triangles[j];
+                    int tr1 = m_MeshData[i].triangles[j + 1];
+                    int tr2 = m_MeshData[i].triangles[j + 2];
+                    smd.WriteLine(m_MeshData[i].name.Replace(" ", "_") + ".bmp");
+                    smd.WriteLine(m_MeshData[i].weightsets_output[tr] + " " + m_MeshData[i].vertices[tr][0].ToString("F6", culture) + " " + m_MeshData[i].vertices[tr][1].ToString("F6", culture) + " " + m_MeshData[i].vertices[tr][2].ToString("F6", culture) + " "
+                    + m_MeshData[i].normals[tr][0].ToString("F6", culture) + " " + m_MeshData[i].normals[tr][1].ToString("F6", culture) + " " + m_MeshData[i].normals[tr][2].ToString("F6", culture) + " " + m_MeshData[i].uvs[tr][0].ToString("F6", culture) + " " + m_MeshData[i].uvs[tr][1].ToString("F6", culture));
+                    smd.WriteLine(m_MeshData[i].weightsets_output[tr1] + " " + m_MeshData[i].vertices[tr1][0].ToString("F6", culture) + " " + m_MeshData[i].vertices[tr1][1].ToString("F6", culture) + " " + m_MeshData[i].vertices[tr1][2].ToString("F6", culture) + " "
+                   + m_MeshData[i].normals[tr1][0].ToString("F6", culture) + " " + m_MeshData[i].normals[tr1][1].ToString("F6", culture) + " " + m_MeshData[i].normals[tr1][2].ToString("F6", culture) + " " + m_MeshData[i].uvs[tr1][0].ToString("F6", culture) + " " + m_MeshData[i].uvs[tr1][1].ToString("F6", culture));
+                    smd.WriteLine(m_MeshData[i].weightsets_output[tr2] + " " + m_MeshData[i].vertices[tr2][0].ToString("F6", culture) + " " + m_MeshData[i].vertices[tr2][1].ToString("F6", culture) + " " + m_MeshData[i].vertices[tr2][2].ToString("F6", culture) + " "
+                   + m_MeshData[i].normals[tr2][0].ToString("F6", culture) + " " + m_MeshData[i].normals[tr2][1].ToString("F6", culture) + " " + m_MeshData[i].normals[tr2][2].ToString("F6", culture) + " " + m_MeshData[i].uvs[tr2][0].ToString("F6", culture) + " " + m_MeshData[i].uvs[tr2][1].ToString("F6", culture));
 
                 }
             }
@@ -731,20 +769,20 @@ namespace LtbToSmd.Models
             float gScan = 1.0f;
             for (int i = 0; i < numBones; i++)
             {
-                smd.Write(" " + i + "  \"" + _BoneData[i].name + "\" " + _BoneData[i].par + "\n");
+                smd.Write(" " + i + "  \"" + m_BoneData[i].name + "\" " + m_BoneData[i].par + "\n");
             }
             smd.Write("end\nskeleton\n");
 
-            for (int i = 0; i < _AnimData[indexanim].nkeyframe; i++)
+            for (int i = 0; i < m_AnimData[indexanim].nkeyframe; i++)
             {
-                float giTime = (float)_AnimData[indexanim].listkeyframe[i] / gScan;
+                float giTime = (float)m_AnimData[indexanim].listkeyframe[i] / gScan;
                 if (float.IsNaN(giTime)) giTime = 0.0f;
 
                 smd.Write("time " + Math.Round(giTime) + "\n");
 
                 for (int k = 0; k < numBones; k++)
                 {
-                    double[] quaternion = new double[4] { _AnimData[indexanim].frame[k].quats[i][0], _AnimData[indexanim].frame[k].quats[i][1], _AnimData[indexanim].frame[k].quats[i][2], _AnimData[indexanim].frame[k].quats[i][3] };
+                    double[] quaternion = new double[4] { m_AnimData[indexanim].frame[k].quats[i][0], m_AnimData[indexanim].frame[k].quats[i][1], m_AnimData[indexanim].frame[k].quats[i][2], m_AnimData[indexanim].frame[k].quats[i][3] };
                     double[,] matrix;
 
 
@@ -768,10 +806,10 @@ namespace LtbToSmd.Models
                     // rotation = quaternionToRotation(quaternion);
 
                     float[] position = new float[3];
-                    position[0] = _AnimData[indexanim].frame[k].pos[i][0];
-                    position[1] = _AnimData[indexanim].frame[k].pos[i][1];
-                    position[2] = _AnimData[indexanim].frame[k].pos[i][2];
-                    if (_BoneData[k].par == -1) rotation[0] -= Math.PI / 2.0f;
+                    position[0] = m_AnimData[indexanim].frame[k].pos[i][0];
+                    position[1] = m_AnimData[indexanim].frame[k].pos[i][1];
+                    position[2] = m_AnimData[indexanim].frame[k].pos[i][2];
+                    if (m_BoneData[k].par == -1) rotation[0] -= Math.PI / 2.0f;
                     smd.Write(k + "   " + position[0].ToString("F6", culture) + " " + position[1].ToString("F6", culture) + " " + position[2].ToString("F6", culture) + " " + rotation[0].ToString("F6", culture) + " " + rotation[1].ToString("F6", culture) + " " + rotation[2].ToString("F6", culture) + "\n");
                 }
             }
@@ -786,7 +824,7 @@ namespace LtbToSmd.Models
             smd.WriteLine("nodes");
             for (int i = 0; i < numBones; i++)
             {
-                smd.WriteLine(i + " \"" + _BoneData[i].name + "\" " + _BoneData[i].par);
+                smd.WriteLine(i + " \"" + m_BoneData[i].name + "\" " + m_BoneData[i].par);
             }
 
             smd.WriteLine("end");
@@ -794,7 +832,7 @@ namespace LtbToSmd.Models
             smd.WriteLine("time 0");
             for (int i = 0; i < numBones; i++)
             {
-                smd.WriteLine(i + " " + _BoneData[i].bone_data_out);
+                smd.WriteLine(i + " " + m_BoneData[i].bone_data_out);
             }
             smd.WriteLine("end");
             smd.WriteLine("triangles");
@@ -846,37 +884,41 @@ namespace LtbToSmd.Models
         {
             for (int n = 0; n < numBones; n++)
             {
-                _BoneData[n].matdata = new double[4, 4];
-                _BoneData[n].name = Read_string(gbStream);
-                _BoneData[n].isbone = gbStream.ReadByte();
-                _BoneData[n].num2 = _LTBFile.ReadUInt16();
+                m_BoneData[n] = new();
+
+                m_BoneData[n].matdata = new double[4, 4];
+                m_BoneData[n].name = Read_string(gbStream);
+                m_BoneData[n].isbone = gbStream.ReadByte();
+                m_BoneData[n].num2 = m_LTBFile.ReadUInt16();
 
                 for (long i = 0; i < 4; i++)
                 {
                     for (int j = 0; j < 4; j++)
                     {
-                        _BoneData[n].matdata[i, j] = _LTBFile.ReadSingle();
+                        m_BoneData[n].matdata[i, j] = m_LTBFile.ReadSingle();
                     }
                 }
-                _BoneData[n].nSubbone = _LTBFile.ReadUInt32();
+                m_BoneData[n].nSubbone = m_LTBFile.ReadUInt32();
             }
         }
 
         private void Parse_submesh(BinaryReader gbStream, uint numSubmesh, int imesh, string meshName)
         {
+
             for (int i = 0; i < numSubmesh; i++)
             {
                 imesh = (int)totalmesh;
 
+                m_MeshData[imesh] = new();
 
-                _MeshData[imesh].name = meshName + "_" + i;
-                _MeshData[imesh].uvs = new List<float[]>();
-                _MeshData[imesh].normals = new List<float[]>();
-                _MeshData[imesh].vertices = new List<float[]>();
-                _MeshData[imesh].weights = new List<float[]>();
-                _MeshData[imesh].triangles = new List<int>();
-                _MeshData[imesh].weightsets = new List<int[]>();
-                _MeshData[imesh].weightsets_output = new List<int>();
+                m_MeshData[imesh].name = meshName + "_" + i;
+                m_MeshData[imesh].uvs = new List<float[]>();
+                m_MeshData[imesh].normals = new List<float[]>();
+                m_MeshData[imesh].vertices = new List<float[]>();
+                m_MeshData[imesh].weights = new List<float[]>();
+                m_MeshData[imesh].triangles = new List<int>();
+                m_MeshData[imesh].weightsets = new List<int[]>();
+                m_MeshData[imesh].weightsets_output = new List<int>();
                 gbStream.ReadUInt32();
                 uint matNum = gbStream.ReadUInt32();
                 gbStream.ReadUInt32(); gbStream.ReadUInt32(); gbStream.ReadUInt32(); gbStream.ReadUInt32();
@@ -892,32 +934,32 @@ namespace LtbToSmd.Models
                     uint meshType = gbStream.ReadUInt32();
                     if (meshType > 20)
                     {
-                        is__doing = false;
+                        IsConverting = false;
                         return;
                     }
-                    _MeshData[imesh].nvertices = numVerts;
-                    _MeshData[imesh].type = meshType;
-                    _MeshData[imesh].nIdx = numIdx;
+                    m_MeshData[imesh].nvertices = numVerts;
+                    m_MeshData[imesh].type = meshType;
+                    m_MeshData[imesh].nIdx = numIdx;
                     gbStream.ReadUInt32(); gbStream.ReadUInt32(); gbStream.ReadUInt32(); gbStream.ReadUInt32(); gbStream.ReadUInt32();
                     uint a = 0;
                     if (unk1 == 4)
                     {
                         a = gbStream.ReadUInt32();
-                        _MeshData[imesh].weightsets.Add(new int[1] { (int)a });
+                        m_MeshData[imesh].weightsets.Add(new int[1] { (int)a });
                     }
                     if (unk1 == 5)
                         a = gbStream.ReadUInt16();
                     Parse_vertices(gbStream, numVerts, (LTBMeshType)meshType, imesh);
                     for (int j = 0; j < numIdx; j++)
                     {
-                        _MeshData[imesh].triangles.Add(_LTBFile.ReadUInt16());
+                        m_MeshData[imesh].triangles.Add(m_LTBFile.ReadUInt16());
                     }
                     if (unk1 == 5)
                     {
                         int numWeight = gbStream.ReadInt32();
                         for (long j = 0; j < numWeight; j++)
                         {
-                            _MeshData[imesh].weightsets.Add(new int[7] { gbStream.ReadInt16(), gbStream.ReadInt16(), gbStream.ReadSByte(), gbStream.ReadSByte(), gbStream.ReadSByte(), gbStream.ReadSByte(), gbStream.ReadInt32() });
+                            m_MeshData[imesh].weightsets.Add(new int[7] { gbStream.ReadInt16(), gbStream.ReadInt16(), gbStream.ReadSByte(), gbStream.ReadSByte(), gbStream.ReadSByte(), gbStream.ReadSByte(), gbStream.ReadInt32() });
                         }
                     }
                     // gbStream.BaseStream.Position = ispos+remain;
@@ -960,7 +1002,7 @@ namespace LtbToSmd.Models
             }
             for (int i = 0; i < numVerts; i++)
             {
-                _MeshData[imesh].vertices.Add(new float[3] { gbStream.ReadSingle(), gbStream.ReadSingle(), gbStream.ReadSingle() });
+                m_MeshData[imesh].vertices.Add(new float[3] { gbStream.ReadSingle(), gbStream.ReadSingle(), gbStream.ReadSingle() });
 
                 if (IncludeWeights)
                 {
@@ -979,14 +1021,14 @@ namespace LtbToSmd.Models
                     else f3 = 1.0f - (f2 + f1);
                     f4 = 1.0f - (f1 + f2 + f3);
                     if (f4 < 0.0f) f4 = 0.0f;
-                    _MeshData[imesh].weights.Add(new float[4] { f1, f2, f3, f4 });
+                    m_MeshData[imesh].weights.Add(new float[4] { f1, f2, f3, f4 });
 
                 }
                 gbStream.BaseStream.Position = gbStream.BaseStream.Position + (int)SkipDataSize;
-                _MeshData[imesh].normals.Add(new float[3] { gbStream.ReadSingle(), gbStream.ReadSingle(), gbStream.ReadSingle() });
+                m_MeshData[imesh].normals.Add(new float[3] { gbStream.ReadSingle(), gbStream.ReadSingle(), gbStream.ReadSingle() });
                 float[] uv = new float[2] { gbStream.ReadSingle(), 1.0f - gbStream.ReadSingle() };
                 if (uv[0] > 1.0f) uv[0] -= 1.0f;
-                _MeshData[imesh].uvs.Add(uv);
+                m_MeshData[imesh].uvs.Add(uv);
             }
         }
 
@@ -997,7 +1039,7 @@ namespace LtbToSmd.Models
             for (int k = 0; k < nskipdata; k++)
             {
 
-                Read_string(_LTBFile);
+                Read_string(m_LTBFile);
                 skipzie = gbStream.ReadUInt32();
                 gbStream.BaseStream.Position += skipzie * 4;
             }
@@ -1006,27 +1048,29 @@ namespace LtbToSmd.Models
             UInt32 CompAnim2 = gbStream.ReadUInt16();
 
             numAnim = gbStream.ReadUInt16();
-            _AnimData = new List<CAnimData>();
+            m_AnimData = new CAnimData[256];
             gbStream.ReadUInt16();
 
             for (int i = 0; i < numAnim; i++)
             {
                 // _AnimData[i].listkeyframe.Clear();
-                _AnimData[i].Dim = new float[3];
-                _AnimData[i].listkeyframe = new List<int>();
-                _AnimData[i].listsound = new List<string>();
-                _AnimData[i].frame = new CFramedata[numBones];
-                _AnimData[i].Dim[0] = gbStream.ReadSingle();
-                _AnimData[i].Dim[1] = gbStream.ReadSingle();
-                _AnimData[i].Dim[2] = gbStream.ReadSingle();
-                _AnimData[i].name = Read_string(gbStream);
+                m_AnimData[i] = new();
+
+                m_AnimData[i].Dim = new float[3];
+                m_AnimData[i].listkeyframe = new List<int>();
+                m_AnimData[i].listsound = new List<string>();
+                m_AnimData[i].frame = new CFramedata[numBones];
+                m_AnimData[i].Dim[0] = gbStream.ReadSingle();
+                m_AnimData[i].Dim[1] = gbStream.ReadSingle();
+                m_AnimData[i].Dim[2] = gbStream.ReadSingle();
+                m_AnimData[i].name = Read_string(gbStream);
                 gbStream.ReadUInt32();
-                _AnimData[i].interp_time = (int)gbStream.ReadUInt32();
-                _AnimData[i].nkeyframe = gbStream.ReadUInt32();
-                for (int j = 0; j < _AnimData[i].nkeyframe; j++)
+                m_AnimData[i].interp_time = (int)gbStream.ReadUInt32();
+                m_AnimData[i].nkeyframe = gbStream.ReadUInt32();
+                for (int j = 0; j < m_AnimData[i].nkeyframe; j++)
                 {
-                    _AnimData[i].listkeyframe.Add((int)gbStream.ReadUInt32());
-                    _AnimData[i].listsound.Add(Read_string(gbStream));
+                    m_AnimData[i].listkeyframe.Add((int)gbStream.ReadUInt32());
+                    m_AnimData[i].listsound.Add(Read_string(gbStream));
 
                 }
 
@@ -1035,8 +1079,9 @@ namespace LtbToSmd.Models
                 // if (nsup != 0) MessageBox.Show(nsup+"");
                 for (int k = 0; k < numBones; k++)
                 {
-                    _AnimData[i].frame[k].pos = new List<float[]>();
-                    _AnimData[i].frame[k].quats = new List<float[]>();
+                    m_AnimData[i].frame[k] = new();
+                    m_AnimData[i].frame[k].pos = new List<float[]>();
+                    m_AnimData[i].frame[k].quats = new List<float[]>();
 
                     if (nsup != 0)
                     {
@@ -1059,13 +1104,13 @@ namespace LtbToSmd.Models
                             p[0] = UnpackFromInt16(gbStream.ReadInt16());
                             p[1] = UnpackFromInt16(gbStream.ReadInt16());
                             p[2] = UnpackFromInt16(gbStream.ReadInt16());
-                            _AnimData[i].frame[k].pos.Add(p);
+                            m_AnimData[i].frame[k].pos.Add(p);
 
                         }
-                        if (gframe_1 < _AnimData[i].nkeyframe)
-                            for (int j = gframe_1; j < _AnimData[i].nkeyframe; j++)
+                        if (gframe_1 < m_AnimData[i].nkeyframe)
+                            for (int j = gframe_1; j < m_AnimData[i].nkeyframe; j++)
                             {
-                                _AnimData[i].frame[k].pos.Add(p);
+                                m_AnimData[i].frame[k].pos.Add(p);
                             }
                         gframe_2 = gbStream.ReadInt16();
                         gbStream.ReadInt16();
@@ -1076,12 +1121,12 @@ namespace LtbToSmd.Models
                             q[1] = gbStream.ReadUInt16() / 32767.0f;
                             q[2] = gbStream.ReadUInt16() / 32767.0f;
                             q[3] = gbStream.ReadUInt16() / 32767.0f;
-                            _AnimData[i].frame[k].quats.Add(q);
+                            m_AnimData[i].frame[k].quats.Add(q);
                         }
-                        if (gframe_2 < _AnimData[i].nkeyframe)
-                            for (int j = gframe_2; j < _AnimData[i].nkeyframe; j++)
+                        if (gframe_2 < m_AnimData[i].nkeyframe)
+                            for (int j = gframe_2; j < m_AnimData[i].nkeyframe; j++)
                             {
-                                _AnimData[i].frame[k].quats.Add(q);
+                                m_AnimData[i].frame[k].quats.Add(q);
                             }
 
                     }
@@ -1093,56 +1138,56 @@ namespace LtbToSmd.Models
                             gbStream.ReadByte();
                         }
 
-                        for (int j = 0; j < _AnimData[i].nkeyframe; j++)
+                        for (int j = 0; j < m_AnimData[i].nkeyframe; j++)
                         {
 
                             float[] p = new float[3];
                             if (k == 0)
                             {
 
-                                p[0] = UnpackFromInt16((Int16)_LTBFile.ReadUInt16());
-                                _LTBFile.ReadUInt16();
-                                p[1] = UnpackFromInt16((Int16)_LTBFile.ReadUInt16());
-                                _LTBFile.ReadUInt16();
-                                p[2] = UnpackFromInt16((Int16)_LTBFile.ReadUInt16());
-                                _LTBFile.ReadUInt16();
+                                p[0] = UnpackFromInt16((Int16)m_LTBFile.ReadUInt16());
+                                m_LTBFile.ReadUInt16();
+                                p[1] = UnpackFromInt16((Int16)m_LTBFile.ReadUInt16());
+                                m_LTBFile.ReadUInt16();
+                                p[2] = UnpackFromInt16((Int16)m_LTBFile.ReadUInt16());
+                                m_LTBFile.ReadUInt16();
 
 
                             }
                             else
                             {
 
-                                p[0] = _LTBFile.ReadSingle();
-                                p[1] = _LTBFile.ReadSingle();
-                                p[2] = _LTBFile.ReadSingle();
+                                p[0] = m_LTBFile.ReadSingle();
+                                p[1] = m_LTBFile.ReadSingle();
+                                p[2] = m_LTBFile.ReadSingle();
 
                             }
 
-                            _AnimData[i].frame[k].pos.Add(p);
+                            m_AnimData[i].frame[k].pos.Add(p);
 
                         }
-                        for (int j = 0; j < _AnimData[i].nkeyframe; j++)
+                        for (int j = 0; j < m_AnimData[i].nkeyframe; j++)
                         {
                             float[] q = new float[4];
                             if (k == 0)
                             {
-                                q[0] = (float)_LTBFile.ReadUInt16() / 32767.0f;
-                                _LTBFile.ReadInt16();
-                                q[1] = (float)_LTBFile.ReadUInt16() / 32767.0f;
-                                _LTBFile.ReadInt16();
-                                q[2] = (float)_LTBFile.ReadUInt16() / 32767.0f;
-                                _LTBFile.ReadInt16();
-                                q[3] = (float)_LTBFile.ReadUInt16() / 32767.0f;
-                                _LTBFile.ReadInt16();
+                                q[0] = (float)m_LTBFile.ReadUInt16() / 32767.0f;
+                                m_LTBFile.ReadInt16();
+                                q[1] = (float)m_LTBFile.ReadUInt16() / 32767.0f;
+                                m_LTBFile.ReadInt16();
+                                q[2] = (float)m_LTBFile.ReadUInt16() / 32767.0f;
+                                m_LTBFile.ReadInt16();
+                                q[3] = (float)m_LTBFile.ReadUInt16() / 32767.0f;
+                                m_LTBFile.ReadInt16();
                             }
                             else
                             {
-                                q[0] = _LTBFile.ReadSingle();
-                                q[1] = _LTBFile.ReadSingle();
-                                q[2] = _LTBFile.ReadSingle();
-                                q[3] = _LTBFile.ReadSingle();
+                                q[0] = m_LTBFile.ReadSingle();
+                                q[1] = m_LTBFile.ReadSingle();
+                                q[2] = m_LTBFile.ReadSingle();
+                                q[3] = m_LTBFile.ReadSingle();
                             }
-                            _AnimData[i].frame[k].quats.Add(q);
+                            m_AnimData[i].frame[k].quats.Add(q);
 
                         }
                     }
@@ -1230,32 +1275,37 @@ namespace LtbToSmd.Models
         #endregion
 
         private uint totalmesh = 0;
-        private int Scaleto = 255;
+        //private int Scaleto = 255;
         private uint numMesh = 0;
         private uint numBones = 0;
         private uint numAnim = 0;
-        private bool isAnim = false;
-        private bool isAutoScaler = false;
-        private bool isSubForm = false;
-        private bool isCalcframe = true;
-        private bool isAutoCreateQC = false;
-        private bool isCheckboxAnim = true;
-        private bool is__doing;
-        private bool is_slp_hand = false;
-        private bool is_spl_model = false;
-        private const float NKF_TRANS_SCALE_1_11_4 = (16.0f);		// 2^4
-        private const float NKF_TRANS_OOSCALE_1_11_4 = (1.0f / NKF_TRANS_SCALE_1_11_4);
+        private bool IsConverting;
+        private bool IsAnim = false;
+        private bool IsAutoScaler = false;
+        private bool IsSubForm = false;
+        private bool IsCalcKeyFramesEnabled { get => GetVM().IsCalcKeyFramesEnabled; }
+        private bool IsGenerateQCEnabled { get => GetVM().IsGenerateQCEnabled; }
+        private bool IsExtractAnimEnabled { get => GetVM().IsExtractAnimEnabled; }
+        private bool IsSeparateArmEnabled { get => GetVM().IsSeparateArmEnabled; }
+        private bool IsSeparateSmdEnabled { get => GetVM().IsSeparateSmdEnabled; }
+        private bool IsCreateSeparateFolderEnabled { get => GetVM().IsCreateSeparateFolders; }
+        private bool IsCreateOutputFolder { get => GetVM().IsCreateOutputFolder; }
+        private const float NKF_TRANS_SCALE_1_11_4 = 16.0f;		// 2^4
+        private const float NKF_TRANS_OOSCALE_1_11_4 = 1.0f / NKF_TRANS_SCALE_1_11_4;
 
         private string cur_fName = "", cur_Path = "";
-        private static List<double[,]> Matrix4x4s = new List<double[,]>();
+        private static List<double[,]>? m_Matrix4x4s;
         private CultureInfo? culture;
 
-        private BinaryReader? _LTBFile;
-        private List<CMeshData>? _MeshData;
-        private List<CBoneData>? _BoneData;
-        private List<CAnimData>? _AnimData;
-        private List<string>? _InputFiles;
-        private List<string>? _InputFileList;
+        private static BinaryReader? m_LTBFile;
+        private CMeshData[] m_MeshData;
+        private CBoneData[] m_BoneData;
+        private CAnimData[] m_AnimData;
+        private List<string>? m_InputFiles;
+
+        private string? m_InputPath { get => m_MainWindowViewModel.InputPath; }
+        private string? m_OutputPath { get => m_MainWindowViewModel.OutputPath; }
+
         enum LTBMeshType
         {
             LTB_MESHTYPE_NOTSKINNED = 1,
@@ -1302,7 +1352,7 @@ namespace LtbToSmd.Models
             public List<string>? listsound;
             public float[]? Dim;
             public int interp_time;
-            public CFramedata[] frame;
+            public CFramedata[]? frame;
         };
     }
 }

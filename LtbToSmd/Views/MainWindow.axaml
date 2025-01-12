@@ -3,7 +3,7 @@
         xmlns:vm="using:LtbToSmd.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" 
+        mc:Ignorable="d"
         x:Class="LtbToSmd.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
@@ -33,10 +33,10 @@
 							<ComboBoxItem Content="输入文件夹"/>
 						</ComboBox>
 						<TextBox IsReadOnly="True" Text="{CompiledBinding InputPath}" Watermark="拖拽添加文件/文件夹（.LTB）" Grid.Row="0" Grid.Column="1" Margin="5"/>
-						<Button Content="浏览" Command="{CompiledBinding BrowseForInputPathCommand}" Width="150" Grid.Row="0" Grid.Column="2" HorizontalContentAlignment="Center"/>
+						<Button Content="浏览" IsEnabled="{CompiledBinding IsAllowChangeInput}" Command="{CompiledBinding BrowseForInputPathCommand}" Width="150" Grid.Row="0" Grid.Column="2" HorizontalContentAlignment="Center"/>
 						<TextBlock Text="输出文件夹：" Grid.Row="1" Grid.Column="0" Margin="10" HorizontalAlignment="Right" VerticalAlignment="Center"/>
 						<TextBox IsReadOnly="True" Text="{CompiledBinding OutputPath}" Watermark="输出路径" Grid.Row="1" Grid.Column="1" Margin="5"/>
-						<Button Content="浏览" Command="{CompiledBinding BrowseForOutputPathCommand}" Width="150" Grid.Row="1" Grid.Column="2" HorizontalContentAlignment="Center"/>
+						<Button Content="浏览" IsEnabled="{CompiledBinding IsAllowChangeOutput}" Command="{CompiledBinding BrowseForOutputPathCommand}" Width="150" Grid.Row="1" Grid.Column="2" HorizontalContentAlignment="Center"/>
 
 					</Grid>
 				</Border>
@@ -46,35 +46,36 @@
 						<StackPanel Margin="10 0">
 							<DockPanel>
 								<TextBlock Text="拆分手臂" Height="14" DockPanel.Dock="Left" Margin="10 10 10 0" VerticalAlignment="Center"/>
-								<ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center" Margin="10 10 10 0" HorizontalAlignment="Right"/>
+								<ToggleSwitch DockPanel.Dock="Right" IsChecked="{CompiledBinding IsSeparateArmEnabled}" VerticalAlignment="Center" Margin="10 10 10 0" HorizontalAlignment="Right"/>
 							</DockPanel>
 							<DockPanel>
 								<TextBlock Text="拆分SMD" DockPanel.Dock="Left" Margin="10 0" VerticalAlignment="Center"/>
-								<ToggleSwitch DockPanel.Dock="Right" Margin="10 0" HorizontalAlignment="Right"/>
+								<ToggleSwitch DockPanel.Dock="Right" IsChecked="{CompiledBinding IsSeparateSmdEnabled}" Margin="10 0" HorizontalAlignment="Right"/>
 							</DockPanel>
 							<DockPanel>
 								<TextBlock Text="提取动画" DockPanel.Dock="Left" Margin="10 0" VerticalAlignment="Center"/>
-								<ToggleSwitch DockPanel.Dock="Right" Margin="10 0" HorizontalAlignment="Right"/>
+								<ToggleSwitch DockPanel.Dock="Right" IsChecked="{CompiledBinding IsExtractAnimEnabled}" Margin="10 0" HorizontalAlignment="Right"/>
 							</DockPanel>
 							<DockPanel>
-								<TextBlock Text="自动计算关键帧" DockPanel.Dock="Left" Margin="10 0" VerticalAlignment="Center"/>
-								<ToggleSwitch DockPanel.Dock="Right" Margin="10 0" HorizontalAlignment="Right"/>
-							</DockPanel>
-							<DockPanel>
-								<TextBlock Text="生成QC" DockPanel.Dock="Left" Margin="10 0" VerticalAlignment="Center"/>
-								<ToggleSwitch DockPanel.Dock="Right" Margin="10 0" HorizontalAlignment="Right"/>
+								<TextBlock Text="向上缩放动画关键帧" DockPanel.Dock="Left" Margin="10 0" VerticalAlignment="Center"/>
+								<ToggleSwitch DockPanel.Dock="Right" IsChecked="{CompiledBinding IsCalcKeyFramesEnabled}" Margin="10 0" HorizontalAlignment="Right"/>
 							</DockPanel>
 							<DockPanel>
 								<TextBlock Text="动画最大帧数" DockPanel.Dock="Left" Margin="10 0" VerticalAlignment="Center"/>
-								<TextBox Text="512" DockPanel.Dock="Right" Margin="10 0" Width="80" HorizontalAlignment="Right"/>
+								<NumericUpDown ShowButtonSpinner="False" Text="{CompiledBinding MaxAnimFrame}" DockPanel.Dock="Right" Margin="10 0" Width="80" HorizontalAlignment="Right"/>
+							</DockPanel>
+
+							<DockPanel>
+								<TextBlock Text="生成QC" DockPanel.Dock="Left" Margin="10 0" VerticalAlignment="Center"/>
+								<ToggleSwitch DockPanel.Dock="Right" IsChecked="{CompiledBinding IsGenerateQCEnabled}" Margin="10 0" HorizontalAlignment="Right"/>
 							</DockPanel>
 							<DockPanel>
 								<TextBlock Text="自动创建输出文件夹" DockPanel.Dock="Left" Margin="10 0" VerticalAlignment="Center"/>
-								<ToggleSwitch DockPanel.Dock="Right" Margin="10 0" HorizontalAlignment="Right"/>
+								<ToggleSwitch IsChecked="{CompiledBinding IsCreateOutputFolder}" DockPanel.Dock="Right" Margin="10 0" HorizontalAlignment="Right"/>
 							</DockPanel>
 							<DockPanel>
 								<TextBlock Text="每个LTB单独创建文件夹" DockPanel.Dock="Left" Margin="10 0" VerticalAlignment="Center"/>
-								<ToggleSwitch DockPanel.Dock="Right" Margin="10 0" HorizontalAlignment="Right"/>
+								<ToggleSwitch IsChecked="{CompiledBinding IsCreateSeparateFolders}" DockPanel.Dock="Right" Margin="10 0" HorizontalAlignment="Right"/>
 							</DockPanel>
 
 						</StackPanel>
@@ -83,8 +84,10 @@
 						<Grid RowDefinitions="*, Auto" Margin="5">
 							
 							<TextBox Watermark="输出日志" Text="{Binding LogText}" IsReadOnly="True" TextWrapping="Wrap" Margin="10"/>
-							<Button Grid.Row="1" FontSize="15" Height="50" Width="150" Content="转换LTB并保存" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="10 5 10 10"/>
-
+							<DockPanel Grid.Row="1">
+								<Button  FontSize="15" Height="50" Width="150" Command="{CompiledBinding StartConvertCommand}" Content="转换LTB并保存" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="10 5 10 10"/>
+								<Button  FontSize="15" Height="50" Width="150" Content="取消" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="10 5 10 10"/>
+							</DockPanel>
 						</Grid>
 					</Border>
 				</DockPanel>

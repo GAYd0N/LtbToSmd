@@ -8,23 +8,27 @@ using LtbToSmd.IoCFileOps.Services;
 using Microsoft.Extensions.DependencyInjection;
 using LtbToSmd.Models;
 using Avalonia.Platform.Storage;
+using System.Text.RegularExpressions;
+using System.Collections.Generic;
+
 
 namespace LtbToSmd.ViewModels
 {
     public partial class MainWindowViewModel : ViewModelBase
     {
-        private LtbModel _ltbModel;
+        private readonly LtbModel m_LtbModel;
         public MainWindowViewModel()
         {
-            _ltbModel = new LtbModel(this);
-            AddLog("Welcome to LTB to SMD converter.");
+            m_LtbModel = new LtbModel(this);
+            m_inputFiles = new List<string>();
+            PrintLog("Welcome to LTB to SMD converter.");
         }
 
         #region LogText
         [ObservableProperty]
         public string? _logText;
 
-        public void AddLog(string log)
+        public void PrintLog(string log)
         {
             LogText += ("[" + DateTime.Now.ToString("HH:mm:ss:ff") + "]" + log + Environment.NewLine);
         }
@@ -37,21 +41,28 @@ namespace LtbToSmd.ViewModels
 
         #region FileOperations
         public void AddInputFile(string file) {
-            _ltbModel.AddInputFile(file);
+            m_LtbModel.AddInputFile(file);
         }
+
+        [ObservableProperty]
+        public bool _isAllowChangeInput = true;
+
+        [ObservableProperty]
+        public bool _isAllowChangeOutput = true;
 
         [ObservableProperty]
         public InputPathType _selectedInputType;
 
         partial void OnSelectedInputTypeChanged(InputPathType value)
         {
-            if (value is InputPathType.PATH && File.Exists(InputPath))
+            if (value is InputPathType.PATH && Path.Exists(InputPath))
             {
                 InputPath = Path.GetDirectoryName(InputPath);
             }
             else if (!File.Exists(InputPath))
             {
                 InputPath = string.Empty;
+                OutputPath = string.Empty;
             }
         }
 
@@ -62,13 +73,51 @@ namespace LtbToSmd.ViewModels
         }
 
         [ObservableProperty]
+        public bool _isSeparateSmdEnabled = true;
+        [ObservableProperty]
+        public bool _isSeparateArmEnabled = true;
+        [ObservableProperty]
+        public bool _isExtractAnimEnabled = true;
+        [ObservableProperty]
+        public bool _isCalcKeyFramesEnabled = true;
+        [ObservableProperty]
+        public bool _isGenerateQCEnabled = true;
+        [ObservableProperty]
+        public string? _maxAnimFrame = "auto";
+        [ObservableProperty]
+        public bool _isCreateOutputFolder = true;
+        [ObservableProperty]
+        public bool _isCreateSeparateFolders = true;
+
+        [ObservableProperty]
         public string? _inputPath;  // file or folder 
 
         partial void OnInputPathChanged(string? value)
         {
-            if (OutputPath == null)
+            if (IsCreateOutputFolder && Path.Exists(value))
             {
-                OutputPath = Path.GetDirectoryName(value) + "\\output";
+                if (SelectedInputType == InputPathType.FILE)
+                {
+                    OutputPath = Path.GetDirectoryName(value) + "\\output";
+                }
+                else if (SelectedInputType == InputPathType.PATH)
+                {
+                    OutputPath = value + "\\output";
+                }
+            }
+        }
+
+        partial void OnIsCreateOutputFolderChanged(bool value)
+        {
+            if (value == true)
+            {
+                OnInputPathChanged(InputPath);
+            }
+            else
+            {
+                // 使用正则表达式替换最后一部分
+                string pattern = $@"\\{Regex.Escape("output")}$";
+                OutputPath = Regex.Replace(OutputPath, pattern, $@"\{string.Empty}");
             }
         }
 
@@ -80,6 +129,9 @@ namespace LtbToSmd.ViewModels
         {
             try
             {
+                m_inputFiles.Clear();
+                if (!IsAllowChangeInput) return;
+
                 var filesService = App.Current?.Services?.GetRequiredService<IFilesService>();
                 if (filesService is null) throw new NullReferenceException("Missing File Service instance.");
 
@@ -89,7 +141,8 @@ namespace LtbToSmd.ViewModels
                     if (file is null) return;
 
                     InputPath = file.TryGetLocalPath();
-                    AddLog("Input file: " + file.Path);
+                    PrintLog("Input file: " + file.Path);
+                    
                 }
                 else if (SelectedInputType == InputPathType.PATH)
                 {
@@ -97,12 +150,12 @@ namespace LtbToSmd.ViewModels
                     if (folder is null) return;
 
                     InputPath = folder.TryGetLocalPath();
-                    AddLog("Input folder: " + folder.Path);
+                    PrintLog("Input folder: " + folder.Path);
                 }
             }
             catch (Exception e)
             {
-                AddLog(e.Message);
+                PrintLog(e.Message);
             }
         }
 
@@ -111,17 +164,38 @@ namespace LtbToSmd.ViewModels
         {
             try
             {
+                if (!IsAllowChangeOutput) return;
+
                 var filesService = App.Current?.Services?.GetRequiredService<IFilesService>();
                 if (filesService is null) throw new NullReferenceException("Missing File Service instance.");
                 var folder = await filesService.OpenFolderAsync();
                 if (folder is null) return;
 
-                OutputPath = folder.TryGetLocalPath();
-                AddLog("Output folder: " + folder.Path);
+                if (IsCreateOutputFolder)
+                {
+                    if (!Path.Exists(InputPath + "\\output"))
+                    {
+                        try
+                        {
+                            Directory.CreateDirectory(InputPath + "\\output");
+                        }
+                        catch (Exception e)
+                        {
+                            PrintLog(e.Message);
+                        }
+                        OutputPath = folder.TryGetLocalPath() + "\\output";
+                        PrintLog("Output folder: " + folder.Path);
+                    }
+                }
+                else
+                {
+                    OutputPath = folder.TryGetLocalPath();
+                    PrintLog("Output folder: " + folder.Path);
+                }
             }
             catch (Exception e)
             {
-                AddLog(e.Message);
+                PrintLog(e.Message);
             }
         }
 
@@ -149,26 +223,77 @@ namespace LtbToSmd.ViewModels
         //    }
         //}
 
-        //private void LoadFileFromPath(string path)
-        //{
-        //    if (File.Exists(path))
-        //    {
-        //        SelectedInputType = InputPathType.FILE;
-        //        using var reader = new StreamReader(path);
-        //        //FileText = reader.ReadToEnd();
-        //    }
-        //    else if (Directory.Exists(path))
-        //    {
-        //        SelectedInputType = InputPathType.PATH;
-        //        AddLog("路径指向一个文件夹，无法加载文件。");
-        //    }
-        //    else
-        //    {
-        //        AddLog("路径既不是文件也不是文件夹。");
-        //    }
-        //}
+        private void GetFileListFromPath(string path)
+        {
+            try
+            {
+                if (SelectedInputType == InputPathType.PATH)
+                { // 获取目录中所有扩展名为 .ltb 的文件
+                 string[] files = Directory.GetFiles(path, "*.ltb");
+
+                     // 提取文件名（不带路径）并添加到 List 中
+                     foreach (var file in files)
+                     {
+                         m_inputFiles.Add(Path.GetFileName(file));
+                     }
+                }
+                else if (SelectedInputType == InputPathType.FILE)
+                {
+                    m_inputFiles.Add(Path.GetFileName(path));
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("加载文件名时出错: " + ex.Message);
+            }
+        }
         #endregion
 
+        #region FileConversion
+        List<string> m_inputFiles;
 
+        private bool m_isConvertCanceled = true;
+
+        // 取消转换
+        CancellationTokenSource cts = new CancellationTokenSource();
+
+        [RelayCommand]
+        private void CancelConvert()
+        {
+            m_isConvertCanceled = true;
+        }
+
+        [RelayCommand]
+        private void StartConvert()
+        {
+            if (string.IsNullOrEmpty(InputPath))
+            {
+                PrintLog("Please select a file or folder first.");
+                return;
+            }
+            IsAllowChangeInput = false;
+            IsAllowChangeOutput = false;
+            GetFileListFromPath(InputPath);
+            if (m_inputFiles.Count == 0)
+            {
+                PrintLog("No .ltb files found in the input folder.");
+                return;
+            }
+            foreach (var file in m_inputFiles)
+            {
+                PrintLog("Converting " + file + "...");
+                Task.Run(()=> ConvertToSmd(file,cts.Token), cts.Token);
+            }
+            IsAllowChangeInput = true;
+            IsAllowChangeOutput = true;
+        }
+
+        private void ConvertToSmd(string file, CancellationToken token)
+        {
+            m_LtbModel.ConvertToSmd(file, token);
+        }
+
+        #endregion
     }
 }
