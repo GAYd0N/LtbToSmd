@@ -10,6 +10,7 @@ using LtbToSmd.Models;
 using Avalonia.Platform.Storage;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using Avalonia.Rendering;
 
 
 namespace LtbToSmd.ViewModels
@@ -17,6 +18,7 @@ namespace LtbToSmd.ViewModels
     public partial class MainWindowViewModel : ViewModelBase
     {
         private readonly LtbModel m_LtbModel;
+
         public MainWindowViewModel()
         {
             m_LtbModel = new LtbModel(this);
@@ -40,9 +42,6 @@ namespace LtbToSmd.ViewModels
         #endregion
 
         #region FileOperations
-        public void AddInputFile(string file) {
-            m_LtbModel.AddInputFile(file);
-        }
 
         [ObservableProperty]
         public bool _isAllowChangeInput = true;
@@ -81,7 +80,7 @@ namespace LtbToSmd.ViewModels
         [ObservableProperty]
         public bool _isCalcKeyFramesEnabled = true;
         [ObservableProperty]
-        public bool _isGenerateQCEnabled = true;
+        public bool _isGenerateQCEnabled = false;
         [ObservableProperty]
         public string? _maxAnimFrame = "auto";
         [ObservableProperty]
@@ -94,7 +93,10 @@ namespace LtbToSmd.ViewModels
 
         partial void OnInputPathChanged(string? value)
         {
-            if (IsCreateOutputFolder && Path.Exists(value))
+            if (Path.Exists(InputPath) is false)
+                return;
+
+            if (IsCreateOutputFolder is true)
             {
                 if (SelectedInputType == InputPathType.FILE)
                 {
@@ -105,19 +107,31 @@ namespace LtbToSmd.ViewModels
                     OutputPath = value + "\\output";
                 }
             }
+            else if (IsCreateOutputFolder is false) 
+            {
+                if (SelectedInputType == InputPathType.FILE)
+                {
+                    OutputPath = Path.GetDirectoryName(value);
+                }
+                else if (SelectedInputType == InputPathType.PATH)
+                {
+                    OutputPath = value;
+                }
+            }
         }
 
         partial void OnIsCreateOutputFolderChanged(bool value)
         {
-            if (value == true)
+            if (OutputPath is null)
+                return;
+            if (value is true)
             {
-                OnInputPathChanged(InputPath);
+                OutputPath = OutputPath + "\\output";
             }
             else
             {
-                // 使用正则表达式替换最后一部分
-                string pattern = $@"\\{Regex.Escape("output")}$";
-                OutputPath = Regex.Replace(OutputPath, pattern, $@"\{string.Empty}");
+                string pattern = @"[\\/]output$";
+                OutputPath = Regex.Replace(OutputPath, pattern, string.Empty);
             }
         }
 
@@ -129,7 +143,6 @@ namespace LtbToSmd.ViewModels
         {
             try
             {
-                m_inputFiles.Clear();
                 if (!IsAllowChangeInput) return;
 
                 var filesService = App.Current?.Services?.GetRequiredService<IFilesService>();
@@ -171,27 +184,9 @@ namespace LtbToSmd.ViewModels
                 var folder = await filesService.OpenFolderAsync();
                 if (folder is null) return;
 
-                if (IsCreateOutputFolder)
-                {
-                    if (!Path.Exists(InputPath + "\\output"))
-                    {
-                        try
-                        {
-                            Directory.CreateDirectory(InputPath + "\\output");
-                        }
-                        catch (Exception e)
-                        {
-                            PrintLog(e.Message);
-                        }
-                        OutputPath = folder.TryGetLocalPath() + "\\output";
-                        PrintLog("Output folder: " + folder.Path);
-                    }
-                }
-                else
-                {
-                    OutputPath = folder.TryGetLocalPath();
-                    PrintLog("Output folder: " + folder.Path);
-                }
+                OutputPath = folder.TryGetLocalPath();
+                PrintLog("Output folder: " + folder.Path);
+                OnInputPathChanged(OutputPath);
             }
             catch (Exception e)
             {
@@ -210,9 +205,6 @@ namespace LtbToSmd.ViewModels
         //        var file = await filesService.SaveFileAsync();
         //        if (file is null) return;
 
-
-        //        // Limit the text file to 1MB so that the demo wont lag.
-
         //        var stream = new MemoryStream(Encoding.Default.GetBytes((string)FileText));
         //        await using var writeStream = await file.OpenWriteAsync();
         //        await stream.CopyToAsync(writeStream);
@@ -228,14 +220,15 @@ namespace LtbToSmd.ViewModels
             try
             {
                 if (SelectedInputType == InputPathType.PATH)
-                { // 获取目录中所有扩展名为 .ltb 的文件
-                 string[] files = Directory.GetFiles(path, "*.ltb");
+                { 
+                    // 获取目录中所有扩展名为 .ltb 的文件
+                    string[] files = Directory.GetFiles(path, "*.ltb");
 
-                     // 提取文件名（不带路径）并添加到 List 中
-                     foreach (var file in files)
-                     {
-                         m_inputFiles.Add(Path.GetFileName(file));
-                     }
+                    // 提取文件名（不带路径）并添加到 List 中
+                    foreach (var file in files)
+                    {
+                        m_inputFiles.Add(Path.GetFileName(file));
+                    }
                 }
                 else if (SelectedInputType == InputPathType.FILE)
                 {
@@ -253,20 +246,28 @@ namespace LtbToSmd.ViewModels
         #region FileConversion
         List<string> m_inputFiles;
 
-        private bool m_isConvertCanceled = true;
+        private bool _isConvertCanceled = true;
+
+        [ObservableProperty]
+        public bool _isAllowConvert = true;
+        [ObservableProperty]
+        public bool _isConverting = false;
 
         // 取消转换
-        CancellationTokenSource cts = new CancellationTokenSource();
+        private readonly CancellationTokenSource _cts = new();
 
         [RelayCommand]
         private void CancelConvert()
         {
-            m_isConvertCanceled = true;
+            _isConvertCanceled = true;
         }
 
         [RelayCommand]
         private void StartConvert()
         {
+            if (_isConverting is true)
+                return;
+            m_inputFiles.Clear();
             if (string.IsNullOrEmpty(InputPath))
             {
                 PrintLog("Please select a file or folder first.");
@@ -274,19 +275,24 @@ namespace LtbToSmd.ViewModels
             }
             IsAllowChangeInput = false;
             IsAllowChangeOutput = false;
+            IsAllowConvert = false;
             GetFileListFromPath(InputPath);
-            if (m_inputFiles.Count == 0)
+            int fileCount = m_inputFiles.Count;
+            if (fileCount == 0)
             {
                 PrintLog("No .ltb files found in the input folder.");
                 return;
             }
+            IsConverting = true;
             foreach (var file in m_inputFiles)
             {
                 PrintLog("Converting " + file + "...");
-                Task.Run(()=> ConvertToSmd(file,cts.Token), cts.Token);
+                ConvertToSmd(file, _cts.Token);
             }
             IsAllowChangeInput = true;
             IsAllowChangeOutput = true;
+            IsAllowConvert = true;
+            IsConverting = false;
         }
 
         private void ConvertToSmd(string file, CancellationToken token)

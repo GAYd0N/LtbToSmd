@@ -85,7 +85,7 @@
 							
 							<TextBox Watermark="输出日志" Text="{Binding LogText}" IsReadOnly="True" TextWrapping="Wrap" Margin="10"/>
 							<DockPanel Grid.Row="1">
-								<Button  FontSize="15" Height="50" Width="150" Command="{CompiledBinding StartConvertCommand}" Content="转换LTB并保存" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="10 5 10 10"/>
+								<Button  FontSize="15" Height="50" Width="150" Content="转换LTB并保存" Command="{CompiledBinding StartConvertCommand}" IsEnabled="{CompiledBinding IsAllowConvert}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="10 5 10 10"/>
 								<Button  FontSize="15" Height="50" Width="150" Content="取消" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="10 5 10 10"/>
 							</DockPanel>
 						</Grid>

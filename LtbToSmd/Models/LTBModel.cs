@@ -16,10 +16,9 @@ namespace LtbToSmd.Models
 
         public LtbModel(MainWindowViewModel vm)
         {
-            m_InputFiles = new List<string>();
             m_Matrix4x4s =  new List<double[,]>();
             m_MainWindowViewModel = vm;
-            CultureInfo culture = (CultureInfo)CultureInfo.CurrentCulture.Clone();
+            culture = (CultureInfo)CultureInfo.CurrentCulture.Clone();
         }
 
         private MainWindowViewModel GetVM()
@@ -27,22 +26,9 @@ namespace LtbToSmd.Models
             return m_MainWindowViewModel;
         }
 
-        public void AddInputFile(string file)
-        {
-            if (m_InputFiles != null)
-            {
-                m_InputFiles.Add(file);
-            }
-        }
-
         private void PrintLog(string log)
         {
             GetVM().PrintLog(log);
-        }
-
-        public void ClearInputFiles()
-        {
-            m_InputFiles.Clear();
         }
 
         
@@ -66,7 +52,7 @@ namespace LtbToSmd.Models
             }
             else
             {
-                gPath = m_InputPath;
+                gPath = Path.GetDirectoryName(m_InputPath);
 
             }
 
@@ -118,8 +104,8 @@ namespace LtbToSmd.Models
             // 初始化存储变量
             PrintLog("Initialize the storage variable\n");
 
-            m_MeshData = new CMeshData[256];
-            m_BoneData = new CBoneData[numBones];
+            m_MeshData = new();
+            m_BoneData = new();
 
             // 检查是否取消
             if (token.IsCancellationRequested)
@@ -161,10 +147,9 @@ namespace LtbToSmd.Models
                 if (IsAnim == true)
                 {
                     //提取动画数据
-                    //richTextBox1.AppendText("           + Lấy dữ liệu về anim\n");
                     Parse_animation(m_LTBFile);
                     //有N个动画
-                    //richTextBox1.AppendText("               * Có " + numAnim + " anim\n");
+                    //richTextBox1.AppendText("有N个动画" + numAnim + " anim\n");
                 }
                 //else //无法从此文件中提取动画
                 //    richTextBox1.AppendText("           + Không lấy được anim trong file này\n");
@@ -177,11 +162,11 @@ namespace LtbToSmd.Models
                 token.ThrowIfCancellationRequested(); // 抛出 OperationCanceledException
             }
             //将网格写入文件
-            //richTextBox1.AppendText("[+] Ghi mesh vào file:" + fname + ".smd\n");
-            //  Scale_();
+            //richTextBox1.AppendText("将网格写入文件:" + fname + ".smd\n");
+            //Scale_();
             calc_databone();
-            //  get_new_bone_out_data(0, 0, 1.0f,1.0f,0.65f);
-            //   Change_a_anim(1.0f, 1.0f, 0.65f);
+            //get_new_bone_out_data(0, 0, 1.0f, 1.0f, 0.65f);
+            //Change_a_anim(1.0f, 1.0f, 0.65f);
             Write_SMD_MODEL(gPath + fname);
             if (IsAnim == true)
                 for (int i = 0; i < numAnim; i++)
@@ -193,11 +178,11 @@ namespace LtbToSmd.Models
             if (IsGenerateQCEnabled == true && IsAnim == true)
             {
                 //创建QC文件
-                //richTextBox1.AppendText("[+] Tạo file QC file:" + fname + ".qc\n");
+                //richTextBox1.AppendText("创建QC文件:" + fname + ".qc\n");
                 Write_QC(gPath + fname + ".qc", fname);
             }
             //转换完成
-            //richTextBox1.AppendText("Hoàn thành!! Bạn có thể kéo lên để xem lại thông báo của quá trình\n");
+
             m_LTBFile.Close();
             if (is_tmp == true) File.Delete("___tmp.tmp");
 
@@ -884,7 +869,7 @@ namespace LtbToSmd.Models
         {
             for (int n = 0; n < numBones; n++)
             {
-                m_BoneData[n] = new();
+                m_BoneData.Add(new CBoneData());
 
                 m_BoneData[n].matdata = new double[4, 4];
                 m_BoneData[n].name = Read_string(gbStream);
@@ -909,7 +894,7 @@ namespace LtbToSmd.Models
             {
                 imesh = (int)totalmesh;
 
-                m_MeshData[imesh] = new();
+                m_MeshData.Add(new CMeshData());
 
                 m_MeshData[imesh].name = meshName + "_" + i;
                 m_MeshData[imesh].uvs = new List<float[]>();
@@ -1048,13 +1033,13 @@ namespace LtbToSmd.Models
             UInt32 CompAnim2 = gbStream.ReadUInt16();
 
             numAnim = gbStream.ReadUInt16();
-            m_AnimData = new CAnimData[256];
+            m_AnimData = new();
             gbStream.ReadUInt16();
 
             for (int i = 0; i < numAnim; i++)
             {
                 // _AnimData[i].listkeyframe.Clear();
-                m_AnimData[i] = new();
+                m_AnimData.Add(new CAnimData());
 
                 m_AnimData[i].Dim = new float[3];
                 m_AnimData[i].listkeyframe = new List<int>();
@@ -1298,10 +1283,9 @@ namespace LtbToSmd.Models
         private CultureInfo? culture;
 
         private static BinaryReader? m_LTBFile;
-        private CMeshData[] m_MeshData;
-        private CBoneData[] m_BoneData;
-        private CAnimData[] m_AnimData;
-        private List<string>? m_InputFiles;
+        private List<CMeshData>? m_MeshData;
+        private List<CBoneData>? m_BoneData;
+        private List<CAnimData>? m_AnimData;
 
         private string? m_InputPath { get => m_MainWindowViewModel.InputPath; }
         private string? m_OutputPath { get => m_MainWindowViewModel.OutputPath; }
