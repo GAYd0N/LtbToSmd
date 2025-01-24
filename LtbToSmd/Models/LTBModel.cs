@@ -36,7 +36,6 @@ namespace LtbToSmd.Models
         {
             totalmesh = 0;
             IsConverting = true;
-            // richTextBox1.AppendText("\n");
             int pos_ext = file.LastIndexOf(".");
             int pos_Path = file.LastIndexOf("\\");
             string fname = file.Substring(pos_Path + 1, pos_ext - pos_Path - 1);
@@ -82,14 +81,12 @@ namespace LtbToSmd.Models
             if (Check_header > 20)
             {
                 m_LTBFile.Close();
-                //LZMA压缩文件
-                //richTextBox1.AppendText("   [!] File pack lmza\n");
-                //进行解压缩
-                //richTextBox1.AppendText("   - Tiến hành decompress\n");
+                PrintLog("File pack lmza\n");
+                PrintLog("进行解压缩\n");
                 Decompress_file(file, "___tmp.tmp");
                 is_tmp = true;
                 //重新读取文件
-                //richTextBox1.AppendText("[+] Tiến hành đọc lại file\n");
+                PrintLog("重新读取文件\n");
                 fileStream = new FileStream("___tmp.tmp", FileMode.Open);
                 m_LTBFile = new BinaryReader(fileStream);
 
@@ -110,7 +107,6 @@ namespace LtbToSmd.Models
             numMesh = m_LTBFile.ReadUInt32();
             // version文件版本
             PrintLog("File version:" + version + "\n");
-            // 初始化存储变量
             PrintLog("Initialize the storage variable\n");
 
             m_MeshData = new();
@@ -129,8 +125,7 @@ namespace LtbToSmd.Models
             numMesh = totalmesh;
             if (IsConverting == false)
             {
-                //过程失败 [不支持此文件类型]
-                //richTextBox1.AppendText("     - Quá trình thất bại [Chư hỗ trợ kiểu file này] \n");
+                PrintLog("不支持此文件类型\n");
                 m_LTBFile.Close();
                 return;
             }
@@ -140,7 +135,7 @@ namespace LtbToSmd.Models
             if (token.IsCancellationRequested)
             {
                 PrintLog("Cancellation detected. Exiting...");
-                token.ThrowIfCancellationRequested(); // 抛出 OperationCanceledException
+                token.ThrowIfCancellationRequested();
             }
             //基础计算
             PrintLog("Basic calculation\n");
@@ -158,40 +153,45 @@ namespace LtbToSmd.Models
                     //提取动画数据
                     Parse_animation(m_LTBFile);
                     //有N个动画
-                    //richTextBox1.AppendText("有N个动画" + numAnim + " anim\n");
+                    PrintLog(numAnim + "个动画\n");
                 }
-                //else //无法从此文件中提取动画
-                //    richTextBox1.AppendText("           + Không lấy được anim trong file này\n");
+                else //无法从此文件中提取动画
+                    PrintLog("无法从此文件中提取动画\n");
             }
             else IsAnim = false;
 
             if (token.IsCancellationRequested)
             {
                 PrintLog("Cancellation detected. Exiting...");
-                token.ThrowIfCancellationRequested(); // 抛出 OperationCanceledException
+                token.ThrowIfCancellationRequested();
             }
             //将网格写入文件
-            //richTextBox1.AppendText("将网格写入文件:" + fname + ".smd\n");
+            PrintLog("将网格写入文件:" + fname + ".smd\n");
             //Scale_();
             calc_databone();
             //get_new_bone_out_data(0, 0, 1.0f, 1.0f, 0.65f);
             //Change_a_anim(1.0f, 1.0f, 0.65f);
             Write_SMD_MODEL(gPath + fname);
+
             if (IsAnim == true)
+            {
                 for (int i = 0; i < numAnim; i++)
                 {
                     //将动画写入文件
-                    //richTextBox1.AppendText("[+] Ghi Anim " + _AnimData[i].name + " vào file:" + _AnimData[i].name + ".smd\n");
                     Write_SMD_ANIM(i, gPath + m_AnimData[i].name + ".smd");
+                    PrintLog("将动画" + m_AnimData[i].name + "写入文件：" + m_AnimData[i].name + ".smd\n");
                 }
+            }
+
             if (IsGenerateQCEnabled == true && IsAnim == true)
             {
                 //创建QC文件
-                //richTextBox1.AppendText("创建QC文件:" + fname + ".qc\n");
+                PrintLog("创建QC文件:" + fname + ".qc\n");
                 Write_QC(gPath + fname + ".qc", fname);
             }
-            //转换完成
 
+            //转换完成
+            PrintLog("转换完成\n");
             m_LTBFile.Close();
             if (is_tmp == true) File.Delete("___tmp.tmp");
 
@@ -314,7 +314,7 @@ namespace LtbToSmd.Models
             if (IsSubForm == false) return;
             //scale_(indexanim, Scaleto);
 
-            if (IsCalcKeyFramesEnabled == false) return;
+            //if (IsCalcKeyFramesEnabled == false) return;
             List<int> glistkeyframe = m_AnimData[indexanim].listkeyframe;
             CFramedata[] frame = m_AnimData[indexanim].frame;
             List<int> newlistframe = new List<int>();
@@ -1029,7 +1029,7 @@ namespace LtbToSmd.Models
         private void Parse_animation(BinaryReader gbStream)
         {
             int nskipdata = gbStream.ReadInt32();
-            long skipzie = 0; ;
+            long skipzie = 0;
             for (int k = 0; k < nskipdata; k++)
             {
 
@@ -1278,7 +1278,6 @@ namespace LtbToSmd.Models
         private bool IsAnim = false;
         private bool IsAutoScaler = false;
         private bool IsSubForm = false;
-        private bool IsCalcKeyFramesEnabled { get => GetVM().IsCalcKeyFramesEnabled; }
         private bool IsGenerateQCEnabled { get => GetVM().IsGenerateQCEnabled; }
         private bool IsExtractAnimEnabled { get => GetVM().IsExtractAnimEnabled; }
         private bool IsSeparateArmEnabled { get => GetVM().IsSeparateArmEnabled; }

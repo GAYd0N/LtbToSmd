@@ -19,7 +19,7 @@
 	<Window.MinHeight>540</Window.MinHeight>
 	<Window.MinWidth>700</Window.MinWidth>
 	
-	<TabControl>
+	<TabControl SelectedIndex="0">
 		<TabItem Header="LTB2SMD">
 			<Grid DragDrop.AllowDrop="True">
 				<Grid.RowDefinitions>
@@ -43,7 +43,7 @@
 				
 				<DockPanel Grid.Row="1">
 					<Border Background="LightGray" CornerRadius="10" Margin="5">
-						<StackPanel Margin="10 0">
+						<StackPanel Margin="10 0" Spacing="5">
 							<DockPanel>
 								<TextBlock Text="拆分手臂" Height="14" DockPanel.Dock="Left" Margin="10 10 10 0" VerticalAlignment="Center"/>
 								<ToggleSwitch DockPanel.Dock="Right" IsChecked="{CompiledBinding IsSeparateArmEnabled}" VerticalAlignment="Center" Margin="10 10 10 0" HorizontalAlignment="Right"/>
@@ -57,15 +57,6 @@
 								<ToggleSwitch DockPanel.Dock="Right" IsChecked="{CompiledBinding IsExtractAnimEnabled}" Margin="10 0" HorizontalAlignment="Right"/>
 							</DockPanel>
 							<DockPanel>
-								<TextBlock Text="向上缩放动画关键帧" DockPanel.Dock="Left" Margin="10 0" VerticalAlignment="Center"/>
-								<ToggleSwitch DockPanel.Dock="Right" IsChecked="{CompiledBinding IsCalcKeyFramesEnabled}" Margin="10 0" HorizontalAlignment="Right"/>
-							</DockPanel>
-							<DockPanel>
-								<TextBlock Text="动画最大帧数" DockPanel.Dock="Left" Margin="10 0" VerticalAlignment="Center"/>
-								<NumericUpDown ShowButtonSpinner="False" Text="{CompiledBinding MaxAnimFrame}" DockPanel.Dock="Right" Margin="10 0" Width="80" HorizontalAlignment="Right"/>
-							</DockPanel>
-
-							<DockPanel>
 								<TextBlock Text="生成QC" DockPanel.Dock="Left" Margin="10 0" VerticalAlignment="Center"/>
 								<ToggleSwitch DockPanel.Dock="Right" IsChecked="{CompiledBinding IsGenerateQCEnabled}" Margin="10 0" HorizontalAlignment="Right"/>
 							</DockPanel>
@@ -75,19 +66,20 @@
 							</DockPanel>
 							<DockPanel>
 								<TextBlock Text="每个LTB单独创建文件夹" DockPanel.Dock="Left" Margin="10 0" VerticalAlignment="Center"/>
-								<ToggleSwitch IsChecked="{CompiledBinding IsCreateSeparateFolders}" DockPanel.Dock="Right" Margin="10 0" HorizontalAlignment="Right"/>
+								<ToggleSwitch IsChecked="{CompiledBinding IsCreateSeparateFolders}" IsEnabled="{CompiledBinding IsAllowChangeCreateSeparateFolder}" DockPanel.Dock="Right" Margin="10 0" HorizontalAlignment="Right"/>
 							</DockPanel>
 
 						</StackPanel>
 					</Border>
 					<Border Background="LightGray" CornerRadius="10" Margin="5">
-						<Grid RowDefinitions="*, Auto" Margin="5">
-							
-							<TextBox Watermark="输出日志" Text="{Binding LogText}" IsReadOnly="True" TextWrapping="Wrap" Margin="10"/>
+						<Grid RowDefinitions="*, auto" Margin="5">
+							<TextBox Grid.Row="0" Watermark="输出日志" Text="{Binding LogText}" IsReadOnly="True" TextWrapping="Wrap" Margin="10"/>
+
 							<DockPanel Grid.Row="1">
 								<Button  FontSize="15" Height="50" Width="150" Content="转换LTB并保存" Command="{CompiledBinding StartConvertCommand}" IsEnabled="{CompiledBinding IsAllowConvert}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="10 5 10 10"/>
 								<Button  FontSize="15" Height="50" Width="150" Content="取消" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="10 5 10 10"/>
 							</DockPanel>
+
 						</Grid>
 					</Border>
 				</DockPanel>
@@ -100,7 +92,9 @@
 			<TextBlock Text="WIP" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="100"/>
 		</TabItem>
 		<TabItem Header="关于">
-			<TextBlock Text="WIP" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="100"/>
+			<StackPanel>
+				<Button Command="{CompiledBinding Hyperlink_PointerPressedCommand}" Content="https://github.com/GAYd0N/LtbToSmd" FontSize="18" Foreground="Blue" Background="Transparent" Cursor="Hand" BorderThickness="0"/>
+			</StackPanel>
 		</TabItem>
 		
 		

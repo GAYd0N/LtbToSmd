@@ -10,7 +10,6 @@ using LtbToSmd.Models;
 using Avalonia.Platform.Storage;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
-using Avalonia.Rendering;
 
 
 namespace LtbToSmd.ViewModels
@@ -23,8 +22,9 @@ namespace LtbToSmd.ViewModels
         {
             m_LtbModel = new LtbModel(this);
             m_inputFiles = new List<string>();
-            PrintLog("Welcome to LTB to SMD converter.");
         }
+
+        #region LTB2SMD
 
         #region LogText
         [ObservableProperty]
@@ -50,16 +50,26 @@ namespace LtbToSmd.ViewModels
         public bool _isAllowChangeOutput = true;
 
         [ObservableProperty]
+        public bool _isAllowChangeCreateSeparateFolder = true;
+
+        [ObservableProperty]
         public InputPathType _selectedInputType;
 
         partial void OnSelectedInputTypeChanged(InputPathType value)
         {
-            if (value == InputPathType.PATH && Path.Exists(InputPath))
+            if (value == InputPathType.PATH)
             {
-                InputPath = Path.GetDirectoryName(InputPath);
+                if (Path.Exists(InputPath))
+                {
+                    InputPath = Path.GetDirectoryName(InputPath);
+                    IsCreateSeparateFolders = true;
+                }
+                IsAllowChangeCreateSeparateFolder = false;
+                IsCreateSeparateFolders = true;
             }
             else if (!File.Exists(InputPath))
             {
+                IsAllowChangeCreateSeparateFolder = true;
                 InputPath = string.Empty;
                 OutputPath = string.Empty;
             }
@@ -78,11 +88,7 @@ namespace LtbToSmd.ViewModels
         [ObservableProperty]
         public bool _isExtractAnimEnabled = true;
         [ObservableProperty]
-        public bool _isCalcKeyFramesEnabled = true;
-        [ObservableProperty]
         public bool _isGenerateQCEnabled = false;
-        [ObservableProperty]
-        public string? _maxAnimFrame = "auto";
         [ObservableProperty]
         public bool _isCreateOutputFolder = true;
         [ObservableProperty]
@@ -299,6 +305,25 @@ namespace LtbToSmd.ViewModels
         {
             m_LtbModel.ConvertToSmd(file, token);
         }
+
+        #endregion
+
+        [RelayCommand]
+        private void Hyperlink_PointerPressed()
+        {
+            // 打开链接
+            var processStartInfo = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "https://github.com/GAYd0N/LtbToSmd",
+                UseShellExecute = true
+            };
+            System.Diagnostics.Process.Start(processStartInfo);
+        }
+        #endregion
+
+        #region DTX2PNG
+
+
 
         #endregion
     }
