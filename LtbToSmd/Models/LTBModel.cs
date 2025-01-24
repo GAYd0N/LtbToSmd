@@ -31,7 +31,7 @@ namespace LtbToSmd.Models
             GetVM().PrintLog(log);
         }
 
-        
+
         public void ConvertToSmd(string file, CancellationToken token)
         {
             totalmesh = 0;
@@ -41,26 +41,35 @@ namespace LtbToSmd.Models
             int pos_Path = file.LastIndexOf("\\");
             string fname = file.Substring(pos_Path + 1, pos_ext - pos_Path - 1);
             string gPath;
-            string cur_fPath = m_InputPath;
-            if (IsCreateSeparateFolderEnabled == true)
+            string cur_fPath, cur_fName;
+            if (IsBatch)
             {
-                gPath = m_OutputPath + "\\" + fname + "\\";
-                if (!Directory.Exists(gPath))
-                {
-                    Directory.CreateDirectory(gPath);
-                }
+                cur_fPath = InputPath;
             }
             else
             {
-                gPath = Path.GetDirectoryName(m_InputPath);
+                cur_fPath = Path.GetDirectoryName(InputPath);
+            }
 
+            if (IsCreateSeparateFolderEnabled)
+            {
+                gPath = OutputPath + "\\" + fname + "\\";
+            }
+            else
+            {
+                gPath = OutputPath + "\\";
+            }
+
+            if (!Directory.Exists(gPath))
+            {
+                Directory.CreateDirectory(gPath);
             }
 
             cur_fName = fname;
             // richTextBox1.AppendText("[+] Path:" + gPath + "\n");
             // richTextBox1.AppendText("[+] file:" + fname + ".ltb\n");
 
-            FileStream fileStream = new FileStream(cur_fPath, FileMode.Open);
+            FileStream fileStream = new FileStream(cur_fPath + "\\" + fname + ".ltb", FileMode.Open);
             m_LTBFile = new BinaryReader(fileStream);
             // 从文件中读取数据
             PrintLog("Read data from the file:" + fname + ".ltb\n");
@@ -69,7 +78,7 @@ namespace LtbToSmd.Models
             m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32();
             // 检查文件类型
             PrintLog("Check file type\n");
-            Boolean is_tmp = false;
+            bool is_tmp = false;
             if (Check_header > 20)
             {
                 m_LTBFile.Close();
@@ -88,7 +97,7 @@ namespace LtbToSmd.Models
                 m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32();
 
             }
-            UInt32 version = m_LTBFile.ReadUInt32();
+            uint version = m_LTBFile.ReadUInt32();
 
             m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32();
             numBones = m_LTBFile.ReadUInt32();
@@ -1259,6 +1268,7 @@ namespace LtbToSmd.Models
 
         #endregion
 
+        #region vars
         private uint totalmesh = 0;
         //private int Scaleto = 255;
         private uint numMesh = 0;
@@ -1274,21 +1284,31 @@ namespace LtbToSmd.Models
         private bool IsSeparateArmEnabled { get => GetVM().IsSeparateArmEnabled; }
         private bool IsSeparateSmdEnabled { get => GetVM().IsSeparateSmdEnabled; }
         private bool IsCreateSeparateFolderEnabled { get => GetVM().IsCreateSeparateFolders; }
-        private bool IsCreateOutputFolder { get => GetVM().IsCreateOutputFolder; }
+
+        private bool IsBatch
+        {
+            get
+            {
+                if (GetVM().SelectedInputType == MainWindowViewModel.InputPathType.PATH)
+                    return true;
+                return false;
+            }
+        }
+
+
         private const float NKF_TRANS_SCALE_1_11_4 = 16.0f;		// 2^4
         private const float NKF_TRANS_OOSCALE_1_11_4 = 1.0f / NKF_TRANS_SCALE_1_11_4;
 
-        private string cur_fName = "", cur_Path = "";
-        private static List<double[,]>? m_Matrix4x4s;
+        private List<double[,]>? m_Matrix4x4s;
         private CultureInfo? culture;
 
-        private static BinaryReader? m_LTBFile;
+        private BinaryReader? m_LTBFile;
         private List<CMeshData>? m_MeshData;
         private List<CBoneData>? m_BoneData;
         private List<CAnimData>? m_AnimData;
 
-        private string? m_InputPath { get => m_MainWindowViewModel.InputPath; }
-        private string? m_OutputPath { get => m_MainWindowViewModel.OutputPath; }
+        private string? InputPath { get => m_MainWindowViewModel.InputPath; }
+        private string? OutputPath { get => m_MainWindowViewModel.OutputPath; }
 
         enum LTBMeshType
         {
@@ -1338,5 +1358,6 @@ namespace LtbToSmd.Models
             public int interp_time;
             public CFramedata[]? frame;
         };
+        #endregion
     }
 }

@@ -54,7 +54,7 @@ namespace LtbToSmd.ViewModels
 
         partial void OnSelectedInputTypeChanged(InputPathType value)
         {
-            if (value is InputPathType.PATH && Path.Exists(InputPath))
+            if (value == InputPathType.PATH && Path.Exists(InputPath))
             {
                 InputPath = Path.GetDirectoryName(InputPath);
             }
@@ -93,10 +93,10 @@ namespace LtbToSmd.ViewModels
 
         partial void OnInputPathChanged(string? value)
         {
-            if (Path.Exists(InputPath) is false)
+            if (Path.Exists(InputPath) == false)
                 return;
 
-            if (IsCreateOutputFolder is true)
+            if (IsCreateOutputFolder == true)
             {
                 if (SelectedInputType == InputPathType.FILE)
                 {
@@ -107,7 +107,7 @@ namespace LtbToSmd.ViewModels
                     OutputPath = value + "\\output";
                 }
             }
-            else if (IsCreateOutputFolder is false) 
+            else if (IsCreateOutputFolder == false) 
             {
                 if (SelectedInputType == InputPathType.FILE)
                 {
@@ -122,9 +122,9 @@ namespace LtbToSmd.ViewModels
 
         partial void OnIsCreateOutputFolderChanged(bool value)
         {
-            if (OutputPath is null)
+            if (string.IsNullOrEmpty(OutputPath))
                 return;
-            if (value is true)
+            if (value == true)
             {
                 OutputPath = OutputPath + "\\output";
             }
@@ -265,7 +265,7 @@ namespace LtbToSmd.ViewModels
         [RelayCommand]
         private void StartConvert()
         {
-            if (_isConverting is true)
+            if (_isConverting == true)
                 return;
             m_inputFiles.Clear();
             if (string.IsNullOrEmpty(InputPath))

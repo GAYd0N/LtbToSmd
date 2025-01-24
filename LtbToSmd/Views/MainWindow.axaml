@@ -28,7 +28,7 @@
 				</Grid.RowDefinitions>
 				<Border	Background="LightGray" CornerRadius="10" Margin="5" Grid.Row="0">
 					<Grid RowDefinitions="*, *" ColumnDefinitions="Auto, 6*, Auto" Margin="10">
-						<ComboBox SelectedIndex="{CompiledBinding SelectedInputType}" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" Margin="5">
+						<ComboBox SelectedIndex="{CompiledBinding SelectedInputType}" IsEnabled="{CompiledBinding IsAllowChangeInput}" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" Margin="5">
 							<ComboBoxItem Content="输入文件"/>
 							<ComboBoxItem Content="输入文件夹"/>
 						</ComboBox>
