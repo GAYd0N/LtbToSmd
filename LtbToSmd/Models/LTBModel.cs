@@ -6,6 +6,7 @@ using SevenZip.Compression.LZMA;
 using LtbToSmd.ViewModels;
 using System.Threading.Tasks;
 using System.Threading;
+using Avalonia.Animation;
 
 namespace LtbToSmd.Models
 {
@@ -16,7 +17,7 @@ namespace LtbToSmd.Models
 
         public LtbModel(MainWindowViewModel vm)
         {
-            m_Matrix4x4s =  new List<double[,]>();
+            m_Matrix4x4s = new List<double[,]>();
             m_MainWindowViewModel = vm;
             culture = (CultureInfo)CultureInfo.CurrentCulture.Clone();
         }
@@ -34,11 +35,12 @@ namespace LtbToSmd.Models
 
         public void ConvertToSmd(string file, CancellationToken token)
         {
+            m_AnimData?.Clear();
+            m_BoneData?.Clear();
+            m_MeshData?.Clear();
             totalmesh = 0;
             IsConverting = true;
-            int pos_ext = file.LastIndexOf(".");
-            int pos_Path = file.LastIndexOf("\\");
-            string fname = file.Substring(pos_Path + 1, pos_ext - pos_Path - 1);
+            string fname = Path.GetFileNameWithoutExtension(file);
             string gPath;
             string cur_fPath, cur_fName;
             if (IsBatch)
@@ -167,7 +169,7 @@ namespace LtbToSmd.Models
             }
             //将网格写入文件
             PrintLog("将网格写入文件:" + fname + ".smd\n");
-            //Scale_();
+
             calc_databone();
             //get_new_bone_out_data(0, 0, 1.0f, 1.0f, 0.65f);
             //Change_a_anim(1.0f, 1.0f, 0.65f);
@@ -312,9 +314,7 @@ namespace LtbToSmd.Models
         private void auto_calc_all_Frame(int indexanim)
         {
             if (IsSubForm == false) return;
-            //scale_(indexanim, Scaleto);
 
-            //if (IsCalcKeyFramesEnabled == false) return;
             List<int> glistkeyframe = m_AnimData[indexanim].listkeyframe;
             CFramedata[] frame = m_AnimData[indexanim].frame;
             List<int> newlistframe = new List<int>();
@@ -376,24 +376,6 @@ namespace LtbToSmd.Models
             m_AnimData[indexanim].frame = newframe;
         }
 
-        //private void scale_(int indexanim, float sizemax)
-        //{
-        //    float nfScale = 1.0f;
-
-        //    float maxframe = (float)_AnimData[indexanim].listkeyframe[(int)_AnimData[indexanim].nkeyframe - 1];
-        //    if (maxframe > sizemax && isAutoScaler == true)
-        //        nfScale = maxframe / sizemax;
-        //    for (int i = 0; i < _AnimData[indexanim].nkeyframe; i++)
-        //    {
-        //        float giTime = (float)_AnimData[indexanim].listkeyframe[i] / nfScale;
-        //        if (float.IsNaN(giTime)) giTime = 0.0f;
-        //        _AnimData[indexanim].listkeyframe[i] = (int)Math.Round(giTime);
-
-        //    }
-        //    return;
-
-        //}
-
         private double[] rotationMatrixToEulerAngles(double[,] matrix)
         {
 
@@ -422,19 +404,18 @@ namespace LtbToSmd.Models
                     z = Math.PI;
                 }
             }
-
-            normal_rotate(x);
-            normal_rotate(y);
-            normal_rotate(z);
+            //返回值未使用
+            //normal_rotate(x);
+            //normal_rotate(y);
+            //normal_rotate(z);
             return new double[] { x, y, z };
 
         }
         private double normal_rotate(double angle)
         {
             while (angle > 2 * (Math.PI)) angle -= 2 * (Math.PI);
-            while (angle < 2 * (Math.PI)) angle += 2 * (Math.PI);
+            while (angle < -2 * (Math.PI)) angle += 2 * (Math.PI);
             return angle;
-
         }
 
         private double[,] worldToLocalMatrix(double[,] Matrix4x4, int parentIndex, List<double[,]> hMas)
@@ -779,7 +760,6 @@ namespace LtbToSmd.Models
                     double[] quaternion = new double[4] { m_AnimData[indexanim].frame[k].quats[i][0], m_AnimData[indexanim].frame[k].quats[i][1], m_AnimData[indexanim].frame[k].quats[i][2], m_AnimData[indexanim].frame[k].quats[i][3] };
                     double[,] matrix;
 
-
                     double length = Math.Sqrt(quaternion[0] * quaternion[0] + quaternion[1] * quaternion[1] + quaternion[2] * quaternion[2] + quaternion[3] * quaternion[3]);
                     quaternion[0] /= length;
                     quaternion[1] /= length;
@@ -789,21 +769,24 @@ namespace LtbToSmd.Models
                     matrix = QuaternionMatrix(quaternion);
                     double[] rotation = new double[3];
 
-
-
-
                     rotation = rotationMatrixToEulerAngles(matrix);
 
-
-
-                    //  rotation = quaternionToRotation(quaternion);
                     // rotation = quaternionToRotation(quaternion);
 
                     float[] position = new float[3];
                     position[0] = m_AnimData[indexanim].frame[k].pos[i][0];
                     position[1] = m_AnimData[indexanim].frame[k].pos[i][1];
                     position[2] = m_AnimData[indexanim].frame[k].pos[i][2];
-                    if (m_BoneData[k].par == -1) rotation[0] -= Math.PI / 2.0f;
+                    if (m_BoneData[k].par == -1)
+                    {
+                        if (IsForceAnimOrigin)
+                        {   //wtf?
+                            rotation[0] = -Math.PI / 2;
+                            rotation[1] = Math.PI;
+                            rotation[2] = -Math.PI;
+                        }
+                        else rotation[0] -= Math.PI / 2.0f;
+                    }
                     smd.Write(k + "   " + position[0].ToString("F6", culture) + " " + position[1].ToString("F6", culture) + " " + position[2].ToString("F6", culture) + " " + rotation[0].ToString("F6", culture) + " " + rotation[1].ToString("F6", culture) + " " + rotation[2].ToString("F6", culture) + "\n");
                 }
             }
@@ -1032,7 +1015,6 @@ namespace LtbToSmd.Models
             long skipzie = 0;
             for (int k = 0; k < nskipdata; k++)
             {
-
                 Read_string(m_LTBFile);
                 skipzie = gbStream.ReadUInt32();
                 gbStream.BaseStream.Position += skipzie * 4;
@@ -1270,20 +1252,18 @@ namespace LtbToSmd.Models
 
         #region vars
         private uint totalmesh = 0;
-        //private int Scaleto = 255;
         private uint numMesh = 0;
         private uint numBones = 0;
         private uint numAnim = 0;
         private bool IsConverting;
         private bool IsAnim = false;
-        private bool IsAutoScaler = false;
         private bool IsSubForm = false;
         private bool IsGenerateQCEnabled { get => GetVM().IsGenerateQCEnabled; }
         private bool IsExtractAnimEnabled { get => GetVM().IsExtractAnimEnabled; }
         private bool IsSeparateArmEnabled { get => GetVM().IsSeparateArmEnabled; }
         private bool IsSeparateSmdEnabled { get => GetVM().IsSeparateSmdEnabled; }
         private bool IsCreateSeparateFolderEnabled { get => GetVM().IsCreateSeparateFolders; }
-
+        private bool IsForceAnimOrigin { get => GetVM().IsForceAnimOrigin; }
         private bool IsBatch
         {
             get
@@ -1293,7 +1273,6 @@ namespace LtbToSmd.Models
                 return false;
             }
         }
-
 
         private const float NKF_TRANS_SCALE_1_11_4 = 16.0f;		// 2^4
         private const float NKF_TRANS_OOSCALE_1_11_4 = 1.0f / NKF_TRANS_SCALE_1_11_4;

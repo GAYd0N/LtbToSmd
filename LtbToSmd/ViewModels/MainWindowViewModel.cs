@@ -262,6 +262,9 @@ namespace LtbToSmd.ViewModels
         // 取消转换
         private readonly CancellationTokenSource _cts = new();
 
+        [ObservableProperty]
+        public bool _isForceAnimOrigin = true;
+
         [RelayCommand]
         private void CancelConvert()
         {
@@ -321,6 +324,7 @@ namespace LtbToSmd.ViewModels
         }
         #endregion
 
+        //Work in progress
         #region DTX2PNG
 
 

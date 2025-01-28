@@ -26,17 +26,17 @@
 					<RowDefinition Height="Auto"/>
 					<RowDefinition Height="*"/>
 				</Grid.RowDefinitions>
-				<Border	Background="LightGray" CornerRadius="10" Margin="5" Grid.Row="0">
+				<Border	Background="WhiteSmoke" CornerRadius="10" Margin="5" Grid.Row="0">
 					<Grid RowDefinitions="*, *" ColumnDefinitions="Auto, 6*, Auto" Margin="10">
 						<ComboBox SelectedIndex="{CompiledBinding SelectedInputType}" IsEnabled="{CompiledBinding IsAllowChangeInput}" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" Margin="5">
 							<ComboBoxItem Content="输入文件"/>
 							<ComboBoxItem Content="输入文件夹"/>
 						</ComboBox>
 						<TextBox IsReadOnly="True" Text="{CompiledBinding InputPath}" Watermark="拖拽添加文件/文件夹（.LTB）" Grid.Row="0" Grid.Column="1" Margin="5"/>
-						<Button Content="浏览" IsEnabled="{CompiledBinding IsAllowChangeInput}" Command="{CompiledBinding BrowseForInputPathCommand}" Width="150" Grid.Row="0" Grid.Column="2" HorizontalContentAlignment="Center"/>
+						<Button Content="浏览" IsEnabled="{CompiledBinding IsAllowChangeInput}" Command="{CompiledBinding BrowseForInputPathCommand}" Width="130" Grid.Row="0" Grid.Column="2" HorizontalContentAlignment="Center"/>
 						<TextBlock Text="输出文件夹：" Grid.Row="1" Grid.Column="0" Margin="10" HorizontalAlignment="Right" VerticalAlignment="Center"/>
 						<TextBox IsReadOnly="True" Text="{CompiledBinding OutputPath}" Watermark="输出路径" Grid.Row="1" Grid.Column="1" Margin="5"/>
-						<Button Content="浏览" IsEnabled="{CompiledBinding IsAllowChangeOutput}" Command="{CompiledBinding BrowseForOutputPathCommand}" Width="150" Grid.Row="1" Grid.Column="2" HorizontalContentAlignment="Center"/>
+						<Button Content="浏览" IsEnabled="{CompiledBinding IsAllowChangeOutput}" Command="{CompiledBinding BrowseForOutputPathCommand}" Width="130" Grid.Row="1" Grid.Column="2" HorizontalContentAlignment="Center"/>
 
 					</Grid>
 				</Border>
@@ -57,6 +57,10 @@
 								<ToggleSwitch DockPanel.Dock="Right" IsChecked="{CompiledBinding IsExtractAnimEnabled}" Margin="10 0" HorizontalAlignment="Right"/>
 							</DockPanel>
 							<DockPanel>
+								<TextBlock Text="强制动画原点" DockPanel.Dock="Left" Margin="10 0" VerticalAlignment="Center"/>
+								<ToggleSwitch DockPanel.Dock="Right" IsChecked="{CompiledBinding IsForceAnimOrigin}" Margin="10 0" HorizontalAlignment="Right"/>
+							</DockPanel>
+							<DockPanel>
 								<TextBlock Text="生成QC" DockPanel.Dock="Left" Margin="10 0" VerticalAlignment="Center"/>
 								<ToggleSwitch DockPanel.Dock="Right" IsChecked="{CompiledBinding IsGenerateQCEnabled}" Margin="10 0" HorizontalAlignment="Right"/>
 							</DockPanel>
@@ -71,13 +75,13 @@
 
 						</StackPanel>
 					</Border>
-					<Border Background="LightGray" CornerRadius="10" Margin="5">
+					<Border Background="WhiteSmoke" CornerRadius="10" Margin="5">
 						<Grid RowDefinitions="*, auto" Margin="5">
 							<TextBox Grid.Row="0" Watermark="输出日志" Text="{Binding LogText}" IsReadOnly="True" TextWrapping="Wrap" Margin="10"/>
 
 							<DockPanel Grid.Row="1">
-								<Button  FontSize="15" Height="50" Width="150" Content="转换LTB并保存" Command="{CompiledBinding StartConvertCommand}" IsEnabled="{CompiledBinding IsAllowConvert}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="10 5 10 10"/>
-								<Button  FontSize="15" Height="50" Width="150" Content="取消" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="10 5 10 10"/>
+								<Button  FontSize="15" Height="40" Width="130" Content="转换LTB并保存" Command="{CompiledBinding StartConvertCommand}" IsEnabled="{CompiledBinding IsAllowConvert}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="10 5 10 10"/>
+								<Button  FontSize="15" Height="40" Width="130" Content="取消" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="10 5 10 10"/>
 							</DockPanel>
 
 						</Grid>
