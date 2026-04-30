@@ -36,6 +36,7 @@
   "dtx.max_edge_unit": "px (0=no limit)",
   "about.link": "https://github.com/GAYd0N/LtbToSmd",
   "about.language": "Language",
+  "about.version": "Version",
   "language.zh_cn": "中文",
   "language.en_us": "English",
 

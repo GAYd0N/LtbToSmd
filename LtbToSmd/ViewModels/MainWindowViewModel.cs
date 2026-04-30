@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
 using LtbToSmd.Models;
@@ -82,6 +83,7 @@ namespace LtbToSmd.ViewModels
             OnPropertyChanged(nameof(Localized_DtxWip));
             OnPropertyChanged(nameof(Localized_AboutLink));
             OnPropertyChanged(nameof(Localized_AboutLanguage));
+            OnPropertyChanged(nameof(Localized_AboutVersion));
             OnPropertyChanged(nameof(Localized_DtxInputWatermark));
             OnPropertyChanged(nameof(Localized_DtxOutputWatermark));
             OnPropertyChanged(nameof(Localized_DtxOutputFormat));
@@ -92,7 +94,8 @@ namespace LtbToSmd.ViewModels
         }
 
         // ---- Localized properties ----
-        public string Localized_Title => _localization["window.title"];
+        public string Localized_Title => _localization["window.title"] + " v" + AppVersion;
+        public string AppVersion => Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0";
         public string Localized_TabLtb2Smd => _localization["tab.ltb2smd"];
         public string Localized_TabDtx2Png => _localization["tab.dtx2png"];
         public string Localized_TabAbout => _localization["tab.about"];
@@ -123,6 +126,7 @@ namespace LtbToSmd.ViewModels
         public string Localized_AutoScroll => _localization["log.auto_scroll"];
         public string Localized_AboutLink => _localization["about.link"];
         public string Localized_AboutLanguage => _localization["about.language"];
+        public string Localized_AboutVersion => _localization["about.version"] + " " + AppVersion;
 
         // ---- Language switching ----
         public class LanguageItem

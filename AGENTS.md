@@ -12,8 +12,21 @@
 ## 常用命令
 
 - **构建项目**：`dotnet build LtbToSmd.sln`
-- **发布 x64 单文件**：`dotnet publish LtbToSmd/LtbToSmd.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -o publish`
+- **发布 x64 单文件**：`.\build\publish.ps1`（自动读取 .csproj 版本号，输出到 `publish/v{version}/`）
+- **手动发布**：`dotnet publish LtbToSmd/LtbToSmd.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -o publish`
 - **运行项目**：`dotnet run --project LtbToSmd/LtbToSmd.csproj`
+
+## 版本管理
+
+- 版本号**唯一来源**：`LtbToSmd.csproj` 中的 `<Version>` 属性
+- 程序启动时通过反射读取程序集版本（`Assembly.GetExecutingAssembly().GetName().Version`）
+- 窗口标题显示为：`"LtbToSmd v{version}"`
+- About 页面显示版本号
+- 发布流程：
+  1. 修改 `.csproj` 中的 `<Version>`
+  2. 运行 `.\build\publish.ps1` 构建发布
+  3. 执行 `git tag v{version}` && `git push origin v{version}`
+  4. 在 GitHub Releases 上传发布包
 
 当前项目没有测试框架。如需添加测试，建议使用 xUnit + Avalonia.Headless。
 

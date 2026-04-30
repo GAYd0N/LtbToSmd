@@ -39,6 +39,19 @@ Requires [.NET 8.0 Runtime](https://aka.ms/get-dotnet-8) (or use the self-contai
 | DtxToPng     | ✅     |
 | RezExplorer  | ❓     |
 
+## 📋 Version History
+
+See the [Releases page](https://github.com/GAYd0N/LtbToSmd/releases) for the full changelog.
+
+The current version is defined in `LtbToSmd.csproj` (`<Version>` property) and displayed in the application title bar and About page.
+
+### Release workflow
+
+1. Update the `<Version>` in `LtbToSmd/LtbToSmd.csproj`
+2. Run `.\build\publish.ps1` to build and output to `publish/v{version}/`
+3. Create a git tag: `git tag v{version}` && `git push origin v{version}`
+4. Create a GitHub Release from the tag and upload the published artifacts
+
 ## ℹ️ Acknowledgements
 This project uses code from:
 1. [AvaloniaUI](https://github.com/AvaloniaUI/Avalonia) — cross-platform UI framework

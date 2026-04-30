@@ -425,6 +425,12 @@
 								   HorizontalAlignment="Center"
 								   Foreground="{DynamicResource SystemAccentColor}"/>
 
+						<TextBlock Text="{CompiledBinding Localized_AboutVersion}"
+								   FontSize="13"
+								   HorizontalAlignment="Center"
+								   Foreground="#888888"
+								   Margin="0, -8, 0, 0"/>
+
 						<Separator Background="#E0E0E0" Margin="0, 4"/>
 
 						<Button Command="{CompiledBinding Hyperlink_PointerPressedCommand}"
