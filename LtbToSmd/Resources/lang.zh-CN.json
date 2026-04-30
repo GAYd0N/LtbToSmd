@@ -27,6 +27,8 @@
   "cancel.button": "取消",
 
   "dtx.wip": "WIP",
+  "dtx.input_watermark": "拖拽添加文件/文件夹（.DTX）",
+  "dtx.output_watermark": "PNG 输出路径",
   "about.link": "https://github.com/GAYd0N/LtbToSmd",
   "about.language": "语言",
   "language.zh_cn": "中文",

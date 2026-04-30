@@ -27,6 +27,8 @@
   "cancel.button": "Cancel",
 
   "dtx.wip": "WIP",
+  "dtx.input_watermark": "Drag and drop file/folder (.DTX)",
+  "dtx.output_watermark": "PNG output path",
   "about.link": "https://github.com/GAYd0N/LtbToSmd",
   "about.language": "Language",
   "language.zh_cn": "中文",

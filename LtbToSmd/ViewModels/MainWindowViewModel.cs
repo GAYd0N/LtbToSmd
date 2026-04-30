@@ -82,6 +82,8 @@ namespace LtbToSmd.ViewModels
             OnPropertyChanged(nameof(Localized_DtxWip));
             OnPropertyChanged(nameof(Localized_AboutLink));
             OnPropertyChanged(nameof(Localized_AboutLanguage));
+            OnPropertyChanged(nameof(Localized_DtxInputWatermark));
+            OnPropertyChanged(nameof(Localized_DtxOutputWatermark));
         }
 
         // ---- Localized properties ----
@@ -107,6 +109,8 @@ namespace LtbToSmd.ViewModels
         public string Localized_BtnConvert => _localization["convert.button"];
         public string Localized_BtnCancel => _localization["cancel.button"];
         public string Localized_DtxWip => _localization["dtx.wip"];
+        public string Localized_DtxInputWatermark => _localization["dtx.input_watermark"];
+        public string Localized_DtxOutputWatermark => _localization["dtx.output_watermark"];
         public string Localized_AboutLink => _localization["about.link"];
         public string Localized_AboutLanguage => _localization["about.language"];
 
@@ -452,10 +456,146 @@ namespace LtbToSmd.ViewModels
         }
         #endregion
 
-        //Work in progress
         #region DTX2PNG
 
+        [ObservableProperty]
+        private string? _dtxInputPath;
 
+        [ObservableProperty]
+        private string? _dtxOutputPath;
+
+        [ObservableProperty]
+        private bool _dtxIsAllowConvert = true;
+
+        [ObservableProperty]
+        private bool _dtxIsConverting = false;
+
+        [ObservableProperty]
+        public InputPathType _dtxSelectedInputType;
+
+        private readonly List<string> _dtxInputFiles = new();
+
+        partial void OnDtxInputPathChanged(string? value)
+        {
+            if (!Path.Exists(value)) return;
+            DtxOutputPath = Path.GetDirectoryName(value) + "\\output";
+        }
+
+        [RelayCommand]
+        private async Task DtxBrowseForInput(CancellationToken token)
+        {
+            try
+            {
+                if (DtxSelectedInputType == InputPathType.FILE)
+                {
+                    var filesService = App.Current?.Services?.GetRequiredService<IFilesService>();
+                    if (filesService is null) throw new NullReferenceException("Missing File Service instance.");
+
+                    var file = await filesService.OpenDtxFileAsync();
+                    if (file is null) return;
+
+                    DtxInputPath = file.TryGetLocalPath();
+                    PrintLog(((ILogger)this).GetString("msg.input_file", file.Path));
+                }
+                else
+                {
+                    var filesService = App.Current?.Services?.GetRequiredService<IFilesService>();
+                    if (filesService is null) throw new NullReferenceException("Missing File Service instance.");
+
+                    var folder = await filesService.OpenFolderAsync();
+                    if (folder is null) return;
+
+                    DtxInputPath = folder.TryGetLocalPath();
+                    PrintLog(((ILogger)this).GetString("msg.input_folder", folder.Path));
+                }
+            }
+            catch (Exception e)
+            {
+                PrintLog(e.Message);
+            }
+        }
+
+        [RelayCommand]
+        private async Task DtxBrowseForOutputFolder(CancellationToken token)
+        {
+            try
+            {
+                var filesService = App.Current?.Services?.GetRequiredService<IFilesService>();
+                if (filesService is null) throw new NullReferenceException("Missing File Service instance.");
+
+                var folder = await filesService.OpenFolderAsync();
+                if (folder is null) return;
+
+                DtxOutputPath = folder.TryGetLocalPath();
+                PrintLog(((ILogger)this).GetString("msg.output_folder", folder.Path));
+            }
+            catch (Exception e)
+            {
+                PrintLog(e.Message);
+            }
+        }
+
+        [RelayCommand]
+        private void DtxStartConvert()
+        {
+            if (DtxIsConverting) return;
+
+            if (string.IsNullOrEmpty(DtxInputPath) || !Path.Exists(DtxInputPath))
+            {
+                PrintLog(((ILogger)this).GetString("msg.select_first"));
+                return;
+            }
+
+            DtxIsAllowConvert = false;
+            DtxIsConverting = true;
+            _dtxInputFiles.Clear();
+
+            if (DtxSelectedInputType == InputPathType.PATH)
+            {
+                var files = Directory.GetFiles(DtxInputPath, "*.dtx");
+                foreach (var f in files)
+                    _dtxInputFiles.Add(f);
+            }
+            else
+            {
+                _dtxInputFiles.Add(DtxInputPath);
+            }
+
+            if (_dtxInputFiles.Count == 0)
+            {
+                PrintLog("未找到 .dtx 文件。");
+                DtxIsAllowConvert = true;
+                DtxIsConverting = false;
+                return;
+            }
+
+            try
+            {
+                var dtxService = App.Current?.Services?.GetRequiredService<IDtxService>();
+                if (dtxService is null) throw new NullReferenceException("Missing DtxService instance.");
+
+                string outputDir = DtxOutputPath ?? Path.GetDirectoryName(DtxInputPath) ?? ".";
+                if (!Directory.Exists(outputDir))
+                    Directory.CreateDirectory(outputDir);
+
+                foreach (var file in _dtxInputFiles)
+                {
+                    var fileName = Path.GetFileName(file);
+                    PrintLog(((ILogger)this).GetString("msg.converting", fileName));
+                    dtxService.ConvertToPng(file, outputDir);
+                }
+                PrintLog(((ILogger)this).GetString("msg.conversion_complete"));
+            }
+            catch (Exception ex)
+            {
+                PrintLog($"DTX 转换失败: {ex.Message}");
+            }
+            finally
+            {
+                DtxIsAllowConvert = true;
+                DtxIsConverting = false;
+            }
+        }
 
         #endregion
     }

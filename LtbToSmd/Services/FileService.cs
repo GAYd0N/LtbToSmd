@@ -50,6 +50,22 @@ public class FilesService : IFilesService
         return files.Count >= 1 ? files[0] : null;
     }
 
+    public async Task<IStorageFile?> OpenDtxFileAsync()
+    {
+        var dtxFilter = new FilePickerFileType(_localization["filter.dtx_image"])
+        {
+            Patterns = new[] { "*.dtx" }
+        };
+        var files = await _target.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+        {
+            Title = _localization["dialog.open_file"],
+            AllowMultiple = false,
+            FileTypeFilter = new[] { dtxFilter }
+        });
+
+        return files.Count >= 1 ? files[0] : null;
+    }
+
     public async Task<IStorageFolder?> OpenFolderAsync()
     {
         var folder = await _target.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions()

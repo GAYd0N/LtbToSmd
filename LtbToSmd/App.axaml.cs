@@ -31,6 +31,7 @@ namespace LtbToSmd
 
                 services.AddSingleton<ILocalizationService, LocalizationService>();
                 services.AddSingleton<IFilesService>(x => new FilesService(desktop.MainWindow, x.GetRequiredService<ILocalizationService>()));
+                services.AddSingleton<IDtxService, DtxService>();
 
                 Services = services.BuildServiceProvider();
 

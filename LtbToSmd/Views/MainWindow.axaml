@@ -208,11 +208,114 @@
 		</TabItem>
 
 		<TabItem Header="{CompiledBinding Localized_TabDtx2Png}">
-			<TextBlock Text="{CompiledBinding Localized_DtxWip}"
-					   VerticalAlignment="Center"
-					   HorizontalAlignment="Center"
-					   FontSize="80"
-					   Opacity="0.3"/>
+			<Grid RowDefinitions="Auto, *"
+				  Margin="10">
+
+				<!-- 输入/输出路径区域 -->
+				<Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+						CornerRadius="8"
+						BorderThickness="1"
+						BorderBrush="#E0E0E0"
+						Padding="15"
+						Grid.Row="0">
+					<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="Auto, *, Auto">
+						<!-- 输入路径行 -->
+						<ComboBox SelectedIndex="{CompiledBinding DtxSelectedInputType}"
+								  Grid.Row="0" Grid.Column="0"
+								  Width="100"
+								  Margin="0,0,8,8"
+								  VerticalContentAlignment="Center">
+							<ComboBoxItem Content="{CompiledBinding Localized_InputFile}"/>
+							<ComboBoxItem Content="{CompiledBinding Localized_InputFolder}"/>
+						</ComboBox>
+						<TextBox IsReadOnly="True"
+								 Text="{CompiledBinding DtxInputPath}"
+								 Watermark="{CompiledBinding Localized_DtxInputWatermark}"
+								 Grid.Row="0" Grid.Column="1"
+								 Margin="0,0,8,8"
+								 VerticalContentAlignment="Center"/>
+						<Button Content="{CompiledBinding Localized_BtnBrowse}"
+								Command="{CompiledBinding DtxBrowseForInputCommand}"
+								Width="100"
+								Grid.Row="0" Grid.Column="2"
+								Margin="0,0,0,8"
+								HorizontalContentAlignment="Center"/>
+
+						<!-- 输出路径行 -->
+						<TextBlock Text="{CompiledBinding Localized_OutputLabel}"
+								   Grid.Row="1" Grid.Column="0"
+								   HorizontalAlignment="Right"
+								   VerticalAlignment="Center"
+								   Margin="0,0,8,0"/>
+						<TextBox IsReadOnly="True"
+								 Text="{CompiledBinding DtxOutputPath}"
+								 Watermark="{CompiledBinding Localized_DtxOutputWatermark}"
+								 Grid.Row="1" Grid.Column="1"
+								 Margin="0,0,8,0"
+								 VerticalContentAlignment="Center"/>
+						<Button Content="{CompiledBinding Localized_BtnBrowse}"
+								Command="{CompiledBinding DtxBrowseForOutputFolderCommand}"
+								Width="100"
+								Grid.Row="1" Grid.Column="2"
+								HorizontalContentAlignment="Center"/>
+					</Grid>
+				</Border>
+
+				<!-- 日志区域 -->
+				<Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+						CornerRadius="8"
+						BorderThickness="1"
+						BorderBrush="#E0E0E0"
+						Padding="12"
+						Grid.Row="1"
+						Margin="0, 10, 0, 0">
+					<Grid RowDefinitions="*, Auto">
+
+						<!-- 日志文本框 -->
+						<TextBox Watermark="{CompiledBinding Localized_LogWatermark}"
+								 Text="{Binding LogText}"
+								 IsReadOnly="True"
+								 TextWrapping="Wrap"
+								 Grid.Row="0"
+								 Margin="0, 0, 0, 8">
+							<TextBox.Styles>
+								<Style Selector="TextBox /template/ Border#border">
+									<Setter Property="Background" Value="White"/>
+									<Setter Property="CornerRadius" Value="6"/>
+								</Style>
+							</TextBox.Styles>
+						</TextBox>
+
+						<!-- 转换按钮 -->
+						<StackPanel Grid.Row="1"
+									Orientation="Horizontal"
+									HorizontalAlignment="Right"
+									Spacing="10">
+							<Button Content="{CompiledBinding Localized_BtnConvert}"
+									Command="{CompiledBinding DtxStartConvertCommand}"
+									IsEnabled="{CompiledBinding DtxIsAllowConvert}"
+									FontSize="14"
+									Height="36"
+									Width="140"
+									VerticalContentAlignment="Center"
+									HorizontalContentAlignment="Center"
+									Background="{DynamicResource SystemAccentColor}"
+									Foreground="White">
+								<Button.Styles>
+									<Style Selector="Button:pointerover">
+										<Setter Property="Opacity" Value="0.85"/>
+									</Style>
+									<Style Selector="Button:disabled">
+										<Setter Property="Opacity" Value="0.5"/>
+									</Style>
+								</Button.Styles>
+							</Button>
+						</StackPanel>
+
+					</Grid>
+				</Border>
+
+			</Grid>
 		</TabItem>
 
 		<TabItem Header="{CompiledBinding Localized_TabAbout}">
