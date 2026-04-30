@@ -1,35 +1,30 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using SevenZip.Compression.LZMA;
-using LtbToSmd.ViewModels;
-using System.Threading.Tasks;
 using System.Threading;
-using Avalonia.Animation;
+using LtbToSmd.Models;
 
-namespace LtbToSmd.Models
+namespace LtbToSmd.Services
 {
 
     public class LtbModel
     {
-        private MainWindowViewModel m_MainWindowViewModel;
+        private readonly ILogger m_Logger;
+        private readonly ILtbConversionConfig m_Config;
 
-        public LtbModel(MainWindowViewModel vm)
+        public LtbModel(ILogger logger, ILtbConversionConfig config)
         {
             m_Matrix4x4s = new List<double[,]>();
-            m_MainWindowViewModel = vm;
+            m_Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            m_Config = config ?? throw new ArgumentNullException(nameof(config));
             culture = (CultureInfo)CultureInfo.CurrentCulture.Clone();
-        }
-
-        private MainWindowViewModel GetVM()
-        {
-            return m_MainWindowViewModel;
         }
 
         private void PrintLog(string log)
         {
-            GetVM().PrintLog(log);
+            m_Logger.PrintLog(log);
         }
 
 
@@ -1258,21 +1253,13 @@ namespace LtbToSmd.Models
         private bool IsConverting;
         private bool IsAnim = false;
         private bool IsSubForm = false;
-        private bool IsGenerateQCEnabled { get => GetVM().IsGenerateQCEnabled; }
-        private bool IsExtractAnimEnabled { get => GetVM().IsExtractAnimEnabled; }
-        private bool IsSeparateArmEnabled { get => GetVM().IsSeparateArmEnabled; }
-        private bool IsSeparateSmdEnabled { get => GetVM().IsSeparateSmdEnabled; }
-        private bool IsCreateSeparateFolderEnabled { get => GetVM().IsCreateSeparateFolders; }
-        private bool IsForceAnimOrigin { get => GetVM().IsForceAnimOrigin; }
-        private bool IsBatch
-        {
-            get
-            {
-                if (GetVM().SelectedInputType == MainWindowViewModel.InputPathType.PATH)
-                    return true;
-                return false;
-            }
-        }
+        private bool IsGenerateQCEnabled { get => m_Config.IsGenerateQCEnabled; }
+        private bool IsExtractAnimEnabled { get => m_Config.IsExtractAnimEnabled; }
+        private bool IsSeparateArmEnabled { get => m_Config.IsSeparateArmEnabled; }
+        private bool IsSeparateSmdEnabled { get => m_Config.IsSeparateSmdEnabled; }
+        private bool IsCreateSeparateFolderEnabled { get => m_Config.IsCreateSeparateFolders; }
+        private bool IsForceAnimOrigin { get => m_Config.IsForceAnimOrigin; }
+        private bool IsBatch { get => m_Config.IsBatch; }
 
         private const float NKF_TRANS_SCALE_1_11_4 = 16.0f;		// 2^4
         private const float NKF_TRANS_OOSCALE_1_11_4 = 1.0f / NKF_TRANS_SCALE_1_11_4;
@@ -1285,57 +1272,9 @@ namespace LtbToSmd.Models
         private List<CBoneData>? m_BoneData;
         private List<CAnimData>? m_AnimData;
 
-        private string? InputPath { get => m_MainWindowViewModel.InputPath; }
-        private string? OutputPath { get => m_MainWindowViewModel.OutputPath; }
+        private string? InputPath { get => m_Config.InputPath; }
+        private string? OutputPath { get => m_Config.OutputPath; }
 
-        enum LTBMeshType
-        {
-            LTB_MESHTYPE_NOTSKINNED = 1,
-            LTB_MESHTYPE_EXTRAFLOAT,
-            LTB_MESHTYPE_SKINNED,
-            LTB_MESHTYPE_SKINNEDALT,
-            LTB_MESHTYPE_TWOEXTRAFLOAT
-        };
-        private class CMeshData
-        {
-            public string? name;
-            public uint nvertices;
-            public uint nIdx;
-            public List<float[]>? vertices;
-            public List<float[]>? normals;
-            public List<float[]>? uvs;
-            public List<float[]>? weights;
-            public List<int[]>? weightsets;
-            public List<int>? weightsets_output;
-            public List<int>? triangles;
-            public uint type;
-        };
-        private class CBoneData
-        {
-            public string? name;
-            public uint nSubbone;
-            public double[,]? matdata;
-            public string? bone_data_out;
-            public uint isbone;
-            public uint num2;
-            public int par;
-        };
-        private class CFramedata
-        {
-            int indexframe;
-            public List<float[]>? pos;
-            public List<float[]>? quats;
-        };
-        private class CAnimData
-        {
-            public string? name;
-            public uint nkeyframe;
-            public List<int>? listkeyframe;
-            public List<string>? listsound;
-            public float[]? Dim;
-            public int interp_time;
-            public CFramedata[]? frame;
-        };
         #endregion
     }
 }

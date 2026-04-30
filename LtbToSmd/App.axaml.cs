@@ -5,7 +5,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
-using LtbToSmd.IoCFileOps.Services;
+using LtbToSmd.Services;
 using LtbToSmd.ViewModels;
 using LtbToSmd.Views;
 using Microsoft.Extensions.DependencyInjection;

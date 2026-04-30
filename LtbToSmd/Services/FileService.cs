@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 
-namespace LtbToSmd.IoCFileOps.Services;
+namespace LtbToSmd.Services;
 
 public class FilesService : IFilesService
 {
@@ -49,11 +49,4 @@ public class FilesService : IFilesService
         return folder.Any() ? folder[0] : null;
     }
 
-    public async Task<IStorageFile?> SaveFileAsync()
-    {
-        return await _target.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
-        {
-            Title = "Save Text File"
-        });
-    }
 }

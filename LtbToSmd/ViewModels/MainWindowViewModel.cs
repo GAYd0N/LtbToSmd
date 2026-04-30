@@ -4,9 +4,9 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
-using LtbToSmd.IoCFileOps.Services;
 using Microsoft.Extensions.DependencyInjection;
 using LtbToSmd.Models;
+using LtbToSmd.Services;
 using Avalonia.Platform.Storage;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
@@ -14,15 +14,17 @@ using System.Collections.Generic;
 
 namespace LtbToSmd.ViewModels
 {
-    public partial class MainWindowViewModel : ViewModelBase
+    public partial class MainWindowViewModel : ViewModelBase, ILogger, ILtbConversionConfig
     {
         private readonly LtbModel m_LtbModel;
 
         public MainWindowViewModel()
         {
-            m_LtbModel = new LtbModel(this);
+            m_LtbModel = new LtbModel(this, this);
             m_inputFiles = new List<string>();
         }
+
+        bool ILtbConversionConfig.IsBatch => SelectedInputType == InputPathType.PATH;
 
         #region LTB2SMD
 
@@ -274,7 +276,7 @@ namespace LtbToSmd.ViewModels
         [RelayCommand]
         private void StartConvert()
         {
-            if (_isConverting == true)
+            if (IsConverting == true)
                 return;
             m_inputFiles.Clear();
             if (string.IsNullOrEmpty(InputPath))
