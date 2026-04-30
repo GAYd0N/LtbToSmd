@@ -37,18 +37,32 @@ namespace LtbToSmd.Views
 
             // 只处理第一个拖拽项
             var first = items.First();
+            var localPath = first.TryGetLocalPath();
+            if (localPath is null) return;
 
-            if (first is IStorageFolder folder)
+            if (first is IStorageFolder)
             {
-                var localPath = folder.TryGetLocalPath();
-                if (localPath is null) return;
-                vm.SetInputPathFromDrop(localPath, MainWindowViewModel.InputPathType.PATH);
+                // 文件夹：仅在当前标签页为 LTB(0) 或 DTX(1) 时设置路径
+                if (MainTabControl?.SelectedIndex == 1)
+                    vm.SetDtxInputPathFromDrop(localPath, MainWindowViewModel.InputPathType.PATH);
+                else if (MainTabControl?.SelectedIndex == 0)
+                    vm.SetInputPathFromDrop(localPath, MainWindowViewModel.InputPathType.PATH);
+                // 关于标签页 → 不动作
             }
-            else if (first is IStorageFile file)
+            else if (first is IStorageFile)
             {
-                var localPath = file.TryGetLocalPath();
-                if (localPath is null) return;
-                vm.SetInputPathFromDrop(localPath, MainWindowViewModel.InputPathType.FILE);
+                var ext = System.IO.Path.GetExtension(localPath)?.ToLowerInvariant();
+                if (ext == ".ltb")
+                {
+                    MainTabControl.SelectedIndex = 0;
+                    vm.SetInputPathFromDrop(localPath, MainWindowViewModel.InputPathType.FILE);
+                }
+                else if (ext == ".dtx")
+                {
+                    MainTabControl.SelectedIndex = 1;
+                    vm.SetDtxInputPathFromDrop(localPath, MainWindowViewModel.InputPathType.FILE);
+                }
+                // 其他扩展名 → 不动作
             }
         }
 

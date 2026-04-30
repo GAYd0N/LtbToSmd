@@ -7,7 +7,9 @@
         x:Class="LtbToSmd.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="{CompiledBinding Localized_Title}">
+        Title="{CompiledBinding Localized_Title}"
+        DragDrop.AllowDrop="True"
+        DragDrop.Drop="OnDrop">
 	<Design.DataContext>
 		<vm:MainWindowViewModel/>
 	</Design.DataContext>
@@ -16,11 +18,9 @@
 	<Window.MinHeight>540</Window.MinHeight>
 	<Window.MinWidth>700</Window.MinWidth>
 
-	<TabControl SelectedIndex="0">
+	<TabControl x:Name="MainTabControl" SelectedIndex="0">
 		<TabItem Header="{CompiledBinding Localized_TabLtb2Smd}">
-			<Grid DragDrop.AllowDrop="True"
-				  DragDrop.Drop="OnDrop"
-				  RowDefinitions="Auto, *"
+			<Grid RowDefinitions="Auto, *"
 				  Margin="10">
 
 				<!-- 输入/输出路径区域 -->

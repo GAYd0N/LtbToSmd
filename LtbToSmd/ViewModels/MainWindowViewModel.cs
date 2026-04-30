@@ -381,6 +381,12 @@ namespace LtbToSmd.ViewModels
             InputPath = localPath;
         }
 
+        public void SetDtxInputPathFromDrop(string localPath, InputPathType type)
+        {
+            DtxSelectedInputType = type;
+            DtxInputPath = localPath;
+        }
+
         #region FileConversion
         List<string> m_inputFiles;
 

@@ -47,12 +47,12 @@ public class LocalizationService : ILocalizationService
         try
         {
             var basePath = AppContext.BaseDirectory;
-            var filePath = Path.Combine(basePath, "Resources", $"lang.{culture.Name}.json");
+            var filePath = Path.Combine(basePath, "Assets", "Lang", $"lang.{culture.Name}.json");
 
             if (!File.Exists(filePath))
             {
                 // Fallback to en-US
-                filePath = Path.Combine(basePath, "Resources", "lang.en-US.json");
+                filePath = Path.Combine(basePath, "Assets", "Lang", "lang.en-US.json");
                 if (!File.Exists(filePath))
                 {
                     _translations = new ConcurrentDictionary<string, string>();
