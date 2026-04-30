@@ -12,7 +12,7 @@
 ## 常用命令
 
 - **构建项目**：`dotnet build LtbToSmd.sln`
-- **发布 x64 版本**：`dotnet publish LtbToSmd/LtbToSmd.csproj -c Release -r win-x64 --self-contained true`
+- **发布 x64 单文件**：`dotnet publish LtbToSmd/LtbToSmd.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -o publish`
 - **运行项目**：`dotnet run --project LtbToSmd/LtbToSmd.csproj`
 
 当前项目没有测试框架。如需添加测试，建议使用 xUnit + Avalonia.Headless。
@@ -35,8 +35,6 @@ LtbToSmd/
 ├── Models/          # 数据模型与接口
 │   ├── ILogger.cs           # 日志接口（解耦 Model 与 ViewModel）
 │   ├── ILtbConversionConfig.cs  # LTB 转换配置接口
-│   ├── LTBModel.cs          # LTB 文件解析与 SMD 转换核心逻辑（~1230 行）
-│   ├── DTXModel.cs          # DTX 图像模型（占位，WIP）
 │   ├── CMeshData.cs         # 网格数据类
 │   ├── CBoneData.cs         # 骨骼数据类
 │   ├── CFramedata.cs        # 帧数据类
@@ -49,9 +47,13 @@ LtbToSmd/
 │   ├── MainWindow.axaml     # 主窗口 XAML 布局
 │   └── MainWindow.axaml.cs  # 代码后置
 ├── Services/        # 服务接口 + 业务逻辑实现
-│   ├── IFilesService.cs     # 文件对话框抽象接口
-│   ├── FileService.cs       # IFilesService 实现
-│   └── LTBModel.cs          # LTB 文件解析与 SMD 转换核心服务
+│   ├── IFilesService.cs        # 文件对话框抽象接口
+│   ├── FileService.cs          # IFilesService 实现
+│   ├── ILocalizationService.cs # 本地化服务接口
+│   ├── LocalizationService.cs  # 本地化服务实现
+│   ├── LTBModel.cs             # LTB 文件解析与 SMD 转换核心服务
+│   ├── IDtxService.cs          # DTX 转换服务接口
+│   └── DtxService.cs           # DTX → PNG/BMP/TGA 转换实现
 ├── App.axaml / App.axaml.cs  # 应用入口，DI 注册
 ├── ViewLocator.cs            # ViewModel → View 映射器
 └── Program.cs                # Avalilla 桌面启动入口
@@ -87,5 +89,5 @@ DI 在 `App.OnFrameworkInitializationCompleted` 中设置，当前仅注册了 `
 ### 当前状态
 
 - **LTB2SMD**：功能完整
-- **DTX2PNG**：占位（仅 `DTXModel.cs` 空类），XAML 中显示 "WIP"
+- **DTX2PNG**：功能完整（支持 DTX → PNG/BMP/TGA，含 Indexed BMP、自动缩放、批量转换）
 - **转换选项**：支持拆分手臂（索引 >= 2 的网格分文件）、按 2000 顶点分块 SMD、动画提取、QC 生成、强制动画原点等
