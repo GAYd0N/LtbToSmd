@@ -34,7 +34,7 @@ namespace LtbToSmd.ViewModels
 
         public void PrintLog(string log)
         {
-            LogText += ("[" + DateTime.Now.ToString("HH:mm:ss:ff") + "]" + log + Environment.NewLine);
+            LogText += ("[" + DateTime.Now.ToString("HH:mm:ss:ff") + "]" + log.TrimEnd('\n', '\r') + Environment.NewLine);
         }
 
         public void ClearLog()
@@ -250,6 +250,14 @@ namespace LtbToSmd.ViewModels
             }
         }
         #endregion
+
+        public void SetInputPathFromDrop(string localPath, InputPathType type)
+        {
+            if (!IsAllowChangeInput) return;
+
+            SelectedInputType = type;
+            InputPath = localPath;
+        }
 
         #region FileConversion
         List<string> m_inputFiles;

@@ -1,8 +1,10 @@
 using System;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using System.Collections.Generic;
+using LtbToSmd.ViewModels;
 
 
 namespace LtbToSmd.Views
@@ -23,23 +25,32 @@ namespace LtbToSmd.Views
                 textBox.CaretIndex = textBox.Text.Length;
             }
         }
-        //private async void OnDrop(object? sender, DragEventArgs e)
-        //{
-        //    if (!e.Data.Contains(DataFormats.Files)) return;
 
-        //    var items = e.Data.GetFiles() ?? Array.Empty<IStorageItem>();
-        //    var files = new List<IStorageFile>();
+        private void OnDrop(object? sender, DragEventArgs e)
+        {
+            if (!e.Data.Contains(DataFormats.Files)) return;
 
-        //    foreach (var item in items)
-        //    {
-        //        if (item is IStorageFile file)
-        //            files.Add(file);
-        //        else if (item is IStorageFolder folder)
-        //            files.AddRange(await FileHelper.ConvertFoldersToFilesAsync(new[] { folder }));
-        //    }
+            var items = e.Data.GetFiles();
+            if (items is null || !items.Any()) return;
 
-        //    if (DataContext is MainViewModel store) _ = store.Import(files);
-        //}
+            if (DataContext is not MainWindowViewModel vm) return;
+
+            // 只处理第一个拖拽项
+            var first = items.First();
+
+            if (first is IStorageFolder folder)
+            {
+                var localPath = folder.TryGetLocalPath();
+                if (localPath is null) return;
+                vm.SetInputPathFromDrop(localPath, MainWindowViewModel.InputPathType.PATH);
+            }
+            else if (first is IStorageFile file)
+            {
+                var localPath = file.TryGetLocalPath();
+                if (localPath is null) return;
+                vm.SetInputPathFromDrop(localPath, MainWindowViewModel.InputPathType.FILE);
+            }
+        }
 
     }
 }

@@ -21,7 +21,8 @@
 	
 	<TabControl SelectedIndex="0">
 		<TabItem Header="LTB2SMD">
-			<Grid DragDrop.AllowDrop="True">
+			<Grid DragDrop.AllowDrop="True"
+				  DragDrop.Drop="OnDrop">
 				<Grid.RowDefinitions>
 					<RowDefinition Height="Auto"/>
 					<RowDefinition Height="*"/>

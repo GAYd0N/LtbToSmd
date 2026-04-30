@@ -68,7 +68,7 @@ namespace LtbToSmd.Services
             FileStream fileStream = new FileStream(cur_fPath + "\\" + fname + ".ltb", FileMode.Open);
             m_LTBFile = new BinaryReader(fileStream);
             // 从文件中读取数据
-            PrintLog("Read data from the file:" + fname + ".ltb\n");
+            PrintLog("Read data from the file: " + fname + ".ltb\n");
 
             int Check_header = m_LTBFile.ReadUInt16(); m_LTBFile.ReadUInt16();
             m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32();
@@ -103,7 +103,7 @@ namespace LtbToSmd.Services
             m_LTBFile.ReadUInt32();
             numMesh = m_LTBFile.ReadUInt32();
             // version文件版本
-            PrintLog("File version:" + version + "\n");
+            PrintLog("File version: " + version + "\n");
             PrintLog("Initialize the storage variable\n");
 
             m_MeshData = new();
@@ -163,7 +163,7 @@ namespace LtbToSmd.Services
                 token.ThrowIfCancellationRequested();
             }
             //将网格写入文件
-            PrintLog("将网格写入文件:" + fname + ".smd\n");
+            PrintLog("将网格写入文件: " + fname + ".smd\n");
 
             calc_databone();
             //get_new_bone_out_data(0, 0, 1.0f, 1.0f, 0.65f);
@@ -176,14 +176,14 @@ namespace LtbToSmd.Services
                 {
                     //将动画写入文件
                     Write_SMD_ANIM(i, gPath + m_AnimData[i].name + ".smd");
-                    PrintLog("将动画" + m_AnimData[i].name + "写入文件：" + m_AnimData[i].name + ".smd\n");
+                    PrintLog("将动画: " + m_AnimData[i].name + " 写入文件: " + m_AnimData[i].name + ".smd\n");
                 }
             }
 
             if (IsGenerateQCEnabled == true && IsAnim == true)
             {
                 //创建QC文件
-                PrintLog("创建QC文件:" + fname + ".qc\n");
+                PrintLog("创建QC文件: " + fname + ".qc\n");
                 Write_QC(gPath + fname + ".qc", fname);
             }
 
