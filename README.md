@@ -1,18 +1,46 @@
-# LtbToSmd 
-A tool for CrossFire.
+# LtbToSmd
+A tool for CrossFire — LTB to SMD model conversion + DTX to PNG/BMP/TGA texture conversion.
 
-##  ♿How to use 
--  Before you use this, will need install <img src="https://raw.githubusercontent.com/dotnet/brand/main/logo/dotnet-logo.svg" width="24"/>[.NET 8.0](https://aka.ms/get-dotnet-8) runtimes
--  Grab prebuild binary from [release](https://github.com/GAYd0N/LtbToSmd/releases), x64 only
+## 📦 Download
+Grab the latest build from [Releases](https://github.com/GAYd0N/LtbToSmd/releases).  
+Requires [.NET 8.0 Runtime](https://aka.ms/get-dotnet-8) (or use the self-contained single-file release).
 
-## 🏗️Work in progress
-| Features    | Planned | Support |
-| ----------- | ------- | ------- |
-| LtbToSmd    | ✅       | ✅       |
-| DtxToPng    | ✅       | ❌       |
-| RezExplorer | ❓       | ❌       |
+## 🚀 Features
 
-## ℹ️Acknowledgements:
-This repository uses code from the following repositories:  
-1. [AvaloniaUI](https://github.com/AvaloniaUI/Avalonia)  
-2. [LTB2SMD](https://github.com/giaynhap/LTB2SMD)
+### LTB2SMD — Model Conversion
+- Convert `.ltb` model files to `.smd` (StudioMDL) format
+- Split arm meshes into separate files
+- Split large SMD files by vertex count
+- Extract bone animations as separate `.smd` files
+- Generate `.qc` compilation config
+- Batch convert entire folders
+
+### DTX2PNG — Texture Conversion
+- Convert `.dtx` texture files to **PNG**, **BMP** or **TGA**
+- **Indexed BMP** — quantize to 256 colors (8-bit BMP)
+- **Auto scaling** — downscale oversized textures to a configurable max edge (default 1024px)
+- **Batch convert** — process folders of `.dtx` files
+- Supports multiple DTX versions (-2, -3, -5) and pixel formats:
+  - 8-bit palette
+  - 32-bit BGRA / RGBA
+  - DXT1 (BC1), DXT3 (BC2), DXT5 (BC3)
+
+### General
+- Drag & drop files/folders onto the window — auto-detects `.ltb` / `.dtx`
+- **Auto-scroll** log with toggle
+- **Cancel** long-running conversions
+- **Language switch** — 中文 / English
+- **Auto-create** output folder per session
+
+## 🏗️ Roadmap
+| Feature      | Status |
+| ------------ | ------ |
+| LtbToSmd     | ✅     |
+| DtxToPng     | ✅     |
+| RezExplorer  | ❓     |
+
+## ℹ️ Acknowledgements
+This project uses code from:
+1. [AvaloniaUI](https://github.com/AvaloniaUI/Avalonia) — cross-platform UI framework
+2. [LTB2SMD](https://github.com/giaynhap/LTB2SMD) — original LTB format reference
+3. [dtx2png](https://github.com/rholdorf/dtx2png) — DTX parsing reference
