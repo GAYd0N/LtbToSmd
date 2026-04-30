@@ -27,6 +27,7 @@ jobs:
       - name: Publish win-x64 (singlefile)
         run: dotnet publish LtbToSmd/LtbToSmd.csproj -c Release -r win-x64 --self-contained true
           -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:IncludeAllContentForSelfExtract=true
           -p:DebugType=None -p:DebugSymbols=false
           -p:Version=${{ env.VERSION }} -p:AssemblyVersion=${{ env.VERSION }}
           -o publish/singlefile/win-x64
@@ -40,12 +41,13 @@ jobs:
       - name: Package win-x64 zips
         run: |
           zip -j "LtbToSmd-v${VERSION}-win-x64-singlefile.zip" publish/singlefile/win-x64/*
-          zip -j "LtbToSmd-v${VERSION}-win-x64.zip" publish/normal/win-x64/*
+          cd publish/normal/win-x64 && zip -r "../../../LtbToSmd-v${VERSION}-win-x64.zip" . && cd ../../..
 
       # ---------- linux-x64 ----------
       - name: Publish linux-x64 (singlefile)
         run: dotnet publish LtbToSmd/LtbToSmd.csproj -c Release -r linux-x64 --self-contained true
           -p:PublishSingleFile=true
+          -p:IncludeAllContentForSelfExtract=true
           -p:DebugType=None -p:DebugSymbols=false
           -p:Version=${{ env.VERSION }} -p:AssemblyVersion=${{ env.VERSION }}
           -o publish/singlefile/linux-x64
@@ -59,7 +61,7 @@ jobs:
       - name: Package linux-x64 zips
         run: |
           zip -j "LtbToSmd-v${VERSION}-linux-x64-singlefile.zip" publish/singlefile/linux-x64/*
-          zip -j "LtbToSmd-v${VERSION}-linux-x64.zip" publish/normal/linux-x64/*
+          cd publish/normal/linux-x64 && zip -r "../../../LtbToSmd-v${VERSION}-linux-x64.zip" . && cd ../../..
 
       # ---------- Release ----------
       - uses: softprops/action-gh-release@v2
