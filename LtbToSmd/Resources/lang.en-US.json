@@ -4,14 +4,15 @@
   "tab.dtx2png": "DTX2PNG",
   "tab.about": "About",
 
-  "input.file": "Input file",
-  "input.folder": "Input folder",
+  "input.file": "File",
+  "input.folder": "Folder",
   "input.watermark": "Drag and drop file/folder (.LTB)",
   "browse": "Browse",
 
   "output.folder_label": "Output folder:",
   "output.watermark": "Output path",
 
+  "config.options": "Conversion Options",
   "config.separate_arm": "Separate arm",
   "config.separate_smd": "Split SMD",
   "config.extract_anim": "Extract animation",
@@ -22,7 +23,7 @@
 
   "log.watermark": "Output log",
 
-  "convert.button": "Convert LTB & Save",
+  "convert.button": "Convert & Save",
   "cancel.button": "Cancel",
 
   "dtx.wip": "WIP",
@@ -31,8 +32,8 @@
   "language.zh_cn": "中文",
   "language.en_us": "English",
 
-  "msg.input_file": "Input file: {0}",
-  "msg.input_folder": "Input folder: {0}",
+  "msg.input_file": "File: {0}",
+  "msg.input_folder": "Folder: {0}",
   "msg.output_folder": "Output folder: {0}",
   "msg.select_first": "Please select a file or folder first.",
   "msg.no_ltb_files": "No .ltb files found in the input folder.",

@@ -4,14 +4,15 @@
   "tab.dtx2png": "DTX2PNG",
   "tab.about": "关于",
 
-  "input.file": "输入文件",
-  "input.folder": "输入文件夹",
+  "input.file": "文件",
+  "input.folder": "文件夹",
   "input.watermark": "拖拽添加文件/文件夹（.LTB）",
   "browse": "浏览",
 
   "output.folder_label": "输出文件夹：",
   "output.watermark": "输出路径",
 
+  "config.options": "转换选项",
   "config.separate_arm": "拆分手臂",
   "config.separate_smd": "拆分SMD",
   "config.extract_anim": "提取动画",
@@ -22,7 +23,7 @@
 
   "log.watermark": "输出日志",
 
-  "convert.button": "转换LTB并保存",
+  "convert.button": "转换并保存",
   "cancel.button": "取消",
 
   "dtx.wip": "WIP",
@@ -31,8 +32,8 @@
   "language.zh_cn": "中文",
   "language.en_us": "English",
 
-  "msg.input_file": "输入文件: {0}",
-  "msg.input_folder": "输入文件夹: {0}",
+  "msg.input_file": "文件: {0}",
+  "msg.input_folder": "文件夹: {0}",
   "msg.output_folder": "输出文件夹: {0}",
   "msg.select_first": "请先选择文件或文件夹。",
   "msg.no_ltb_files": "在输入文件夹中未找到 .ltb 文件。",

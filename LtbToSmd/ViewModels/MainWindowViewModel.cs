@@ -68,6 +68,7 @@ namespace LtbToSmd.ViewModels
             OnPropertyChanged(nameof(Localized_BtnBrowse));
             OnPropertyChanged(nameof(Localized_OutputLabel));
             OnPropertyChanged(nameof(Localized_OutputWatermark));
+            OnPropertyChanged(nameof(Localized_ConfigOptions));
             OnPropertyChanged(nameof(Localized_ConfigSeparateArm));
             OnPropertyChanged(nameof(Localized_ConfigSeparateSmd));
             OnPropertyChanged(nameof(Localized_ConfigExtractAnim));
@@ -94,6 +95,7 @@ namespace LtbToSmd.ViewModels
         public string Localized_BtnBrowse => _localization["browse"];
         public string Localized_OutputLabel => _localization["output.folder_label"];
         public string Localized_OutputWatermark => _localization["output.watermark"];
+        public string Localized_ConfigOptions => _localization["config.options"];
         public string Localized_ConfigSeparateArm => _localization["config.separate_arm"];
         public string Localized_ConfigSeparateSmd => _localization["config.separate_smd"];
         public string Localized_ConfigExtractAnim => _localization["config.extract_anim"];
