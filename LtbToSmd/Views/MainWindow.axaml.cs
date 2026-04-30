@@ -16,14 +16,14 @@ namespace LtbToSmd.Views
             InitializeComponent();
 
             LogTextBox.TextChanged += OnLogTextChanged;
+            DtxLogTextBox.TextChanged += OnLogTextChanged;
         }
 
         private void OnLogTextChanged(object? sender, TextChangedEventArgs e)
         {
-            if (sender is TextBox textBox && textBox.Text is { Length: > 0 })
-            {
-                textBox.CaretIndex = textBox.Text.Length;
-            }
+            if (sender is not TextBox textBox || textBox.Text is not { Length: > 0 }) return;
+            if (DataContext is not MainWindowViewModel vm || !vm.IsAutoScroll) return;
+            textBox.CaretIndex = textBox.Text.Length;
         }
 
         private void OnDrop(object? sender, DragEventArgs e)

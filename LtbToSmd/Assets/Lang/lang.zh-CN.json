@@ -22,13 +22,18 @@
   "config.separate_folder_per_ltb": "每个LTB单独创建文件夹",
 
   "log.watermark": "输出日志",
+  "log.auto_scroll": "自动滚动",
 
   "convert.button": "转换并保存",
   "cancel.button": "取消",
 
   "dtx.wip": "WIP",
   "dtx.input_watermark": "拖拽添加文件/文件夹（.DTX）",
-  "dtx.output_watermark": "PNG 输出路径",
+  "dtx.output_watermark": "输出路径",
+  "dtx.output_format": "输出格式",
+  "dtx.indexed_bmp": "BMP 转为索引色",
+  "dtx.max_edge_label": "最大边长",
+  "dtx.max_edge_unit": "像素（0=不限制）",
   "about.link": "https://github.com/GAYd0N/LtbToSmd",
   "about.language": "语言",
   "language.zh_cn": "中文",

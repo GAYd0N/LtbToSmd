@@ -84,6 +84,11 @@ namespace LtbToSmd.ViewModels
             OnPropertyChanged(nameof(Localized_AboutLanguage));
             OnPropertyChanged(nameof(Localized_DtxInputWatermark));
             OnPropertyChanged(nameof(Localized_DtxOutputWatermark));
+            OnPropertyChanged(nameof(Localized_DtxOutputFormat));
+            OnPropertyChanged(nameof(Localized_AutoScroll));
+            OnPropertyChanged(nameof(Localized_DtxIndexedBmp));
+            OnPropertyChanged(nameof(Localized_DtxMaxEdgeLabel));
+            OnPropertyChanged(nameof(Localized_DtxMaxEdgeUnit));
         }
 
         // ---- Localized properties ----
@@ -111,6 +116,11 @@ namespace LtbToSmd.ViewModels
         public string Localized_DtxWip => _localization["dtx.wip"];
         public string Localized_DtxInputWatermark => _localization["dtx.input_watermark"];
         public string Localized_DtxOutputWatermark => _localization["dtx.output_watermark"];
+        public string Localized_DtxOutputFormat => _localization["dtx.output_format"];
+        public string Localized_DtxIndexedBmp => _localization["dtx.indexed_bmp"];
+        public string Localized_DtxMaxEdgeLabel => _localization["dtx.max_edge_label"];
+        public string Localized_DtxMaxEdgeUnit => _localization["dtx.max_edge_unit"];
+        public string Localized_AutoScroll => _localization["log.auto_scroll"];
         public string Localized_AboutLink => _localization["about.link"];
         public string Localized_AboutLanguage => _localization["about.language"];
 
@@ -148,6 +158,9 @@ namespace LtbToSmd.ViewModels
         #region LogText
         [ObservableProperty]
         public string? _logText;
+
+        [ObservableProperty]
+        private bool _isAutoScroll = true;
 
         public void PrintLog(string log)
         {
@@ -314,9 +327,11 @@ namespace LtbToSmd.ViewModels
                 var folder = await filesService.OpenFolderAsync();
                 if (folder is null) return;
 
-                OutputPath = folder.TryGetLocalPath();
+                var path = folder.TryGetLocalPath();
+                if (IsCreateOutputFolder)
+                    path += "\\output";
+                OutputPath = path;
                 PrintLog(((ILogger)this).GetString("msg.output_folder", folder.Path));
-                OnInputPathChanged(OutputPath);
             }
             catch (Exception e)
             {
@@ -390,15 +405,12 @@ namespace LtbToSmd.ViewModels
         #region FileConversion
         List<string> m_inputFiles;
 
-        private bool _isConvertCanceled = true;
+        private CancellationTokenSource? _ltbCts;
 
         [ObservableProperty]
         public bool _isAllowConvert = true;
         [ObservableProperty]
         public bool _isConverting = false;
-
-        // 取消转换
-        private readonly CancellationTokenSource _cts = new();
 
         [ObservableProperty]
         public bool _isForceAnimOrigin = true;
@@ -406,36 +418,56 @@ namespace LtbToSmd.ViewModels
         [RelayCommand]
         private void CancelConvert()
         {
-            _isConvertCanceled = true;
+            _ltbCts?.Cancel();
         }
 
         [RelayCommand]
-        private void StartConvert()
+        private async Task StartConvert()
         {
-            if (IsConverting == true)
-                return;
+            if (IsConverting) return;
+
             m_inputFiles.Clear();
             if (string.IsNullOrEmpty(InputPath))
             {
                 PrintLog(((ILogger)this).GetString("msg.select_first"));
                 return;
             }
+
             IsAllowChangeInput = false;
             IsAllowChangeOutput = false;
             IsAllowConvert = false;
             GetFileListFromPath(InputPath);
-            int fileCount = m_inputFiles.Count;
-            if (fileCount == 0)
+
+            if (m_inputFiles.Count == 0)
             {
                 PrintLog(((ILogger)this).GetString("msg.no_ltb_files"));
+                IsAllowChangeInput = true;
+                IsAllowChangeOutput = true;
+                IsAllowConvert = true;
                 return;
             }
+
             IsConverting = true;
+            _ltbCts = new CancellationTokenSource();
+            bool cancelled = false;
+
             foreach (var file in m_inputFiles)
             {
+                if (_ltbCts.IsCancellationRequested)
+                {
+                    cancelled = true;
+                    break;
+                }
+
                 PrintLog(((ILogger)this).GetString("msg.converting", file));
-                ConvertToSmd(file, _cts.Token);
+                await Task.Run(() => ConvertToSmd(file, _ltbCts.Token));
             }
+
+            if (cancelled)
+                PrintLog(((ILogger)this).GetString("msg.cancellation_detected"));
+
+            _ltbCts?.Dispose();
+            _ltbCts = null;
             IsAllowChangeInput = true;
             IsAllowChangeOutput = true;
             IsAllowConvert = true;
@@ -479,12 +511,50 @@ namespace LtbToSmd.ViewModels
         [ObservableProperty]
         public InputPathType _dtxSelectedInputType;
 
+        [ObservableProperty]
+        private int _dtxSelectedFormatIndex = 1;
+
+        private CancellationTokenSource? _dtxCts;
+
+        [ObservableProperty]
+        private bool _dtxIsIndexedBmp = true;
+
+        [ObservableProperty]
+        private int _dtxMaxEdgeLength = 1024;
+
+        [ObservableProperty]
+        private bool _dtxIsCreateOutputFolder = true;
+
+        public ObservableCollection<string> DtxFormatItems { get; } = new() { "PNG", "BMP", "TGA" };
+
+        public bool DtxIsBmpSelected => DtxSelectedFormatIndex == 1;
+
+        partial void OnDtxSelectedFormatIndexChanged(int value)
+        {
+            OnPropertyChanged(nameof(DtxIsBmpSelected));
+            if (value != 1) DtxIsIndexedBmp = false;
+        }
+
         private readonly List<string> _dtxInputFiles = new();
 
         partial void OnDtxInputPathChanged(string? value)
         {
             if (!Path.Exists(value)) return;
-            DtxOutputPath = Path.GetDirectoryName(value) + "\\output";
+            DtxOutputPath = DtxIsCreateOutputFolder
+                ? Path.GetDirectoryName(value) + "\\output"
+                : (DtxSelectedInputType == InputPathType.PATH ? value : Path.GetDirectoryName(value));
+        }
+
+        partial void OnDtxIsCreateOutputFolderChanged(bool value)
+        {
+            if (string.IsNullOrEmpty(DtxOutputPath)) return;
+            if (value)
+                DtxOutputPath = DtxOutputPath + "\\output";
+            else
+            {
+                string pattern = @"[\\/]output$";
+                DtxOutputPath = Regex.Replace(DtxOutputPath, pattern, string.Empty);
+            }
         }
 
         [RelayCommand]
@@ -532,7 +602,10 @@ namespace LtbToSmd.ViewModels
                 var folder = await filesService.OpenFolderAsync();
                 if (folder is null) return;
 
-                DtxOutputPath = folder.TryGetLocalPath();
+                var path = folder.TryGetLocalPath();
+                if (DtxIsCreateOutputFolder)
+                    path += "\\output";
+                DtxOutputPath = path;
                 PrintLog(((ILogger)this).GetString("msg.output_folder", folder.Path));
             }
             catch (Exception e)
@@ -542,7 +615,7 @@ namespace LtbToSmd.ViewModels
         }
 
         [RelayCommand]
-        private void DtxStartConvert()
+        private async Task DtxStartConvert()
         {
             if (DtxIsConverting) return;
 
@@ -555,6 +628,7 @@ namespace LtbToSmd.ViewModels
             DtxIsAllowConvert = false;
             DtxIsConverting = true;
             _dtxInputFiles.Clear();
+            _dtxCts = new CancellationTokenSource();
 
             if (DtxSelectedInputType == InputPathType.PATH)
             {
@@ -575,6 +649,10 @@ namespace LtbToSmd.ViewModels
                 return;
             }
 
+            var format = (DtxOutputFormat)DtxSelectedFormatIndex;
+            bool doIndexed = format == DtxOutputFormat.Bmp && DtxIsIndexedBmp;
+            bool cancelled = false;
+
             try
             {
                 var dtxService = App.Current?.Services?.GetRequiredService<IDtxService>();
@@ -586,11 +664,26 @@ namespace LtbToSmd.ViewModels
 
                 foreach (var file in _dtxInputFiles)
                 {
+                    if (_dtxCts.IsCancellationRequested)
+                    {
+                        cancelled = true;
+                        break;
+                    }
+
                     var fileName = Path.GetFileName(file);
                     PrintLog(((ILogger)this).GetString("msg.converting", fileName));
-                    dtxService.ConvertToPng(file, outputDir);
+                    await Task.Run(() =>
+                        dtxService.Convert(file, outputDir, format, doIndexed, DtxMaxEdgeLength, _dtxCts.Token));
                 }
-                PrintLog(((ILogger)this).GetString("msg.conversion_complete"));
+
+                if (cancelled)
+                    PrintLog(((ILogger)this).GetString("msg.cancellation_detected"));
+                else
+                    PrintLog(((ILogger)this).GetString("msg.conversion_complete"));
+            }
+            catch (OperationCanceledException)
+            {
+                PrintLog(((ILogger)this).GetString("msg.cancellation_detected"));
             }
             catch (Exception ex)
             {
@@ -598,9 +691,17 @@ namespace LtbToSmd.ViewModels
             }
             finally
             {
+                _dtxCts?.Dispose();
+                _dtxCts = null;
                 DtxIsAllowConvert = true;
                 DtxIsConverting = false;
             }
+        }
+
+        [RelayCommand]
+        private void DtxCancelConvert()
+        {
+            _dtxCts?.Cancel();
         }
 
         #endregion

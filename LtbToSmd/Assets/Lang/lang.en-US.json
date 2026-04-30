@@ -22,13 +22,18 @@
   "config.separate_folder_per_ltb": "Separate folder per LTB",
 
   "log.watermark": "Output log",
+  "log.auto_scroll": "Auto scroll",
 
   "convert.button": "Convert & Save",
   "cancel.button": "Cancel",
 
   "dtx.wip": "WIP",
   "dtx.input_watermark": "Drag and drop file/folder (.DTX)",
-  "dtx.output_watermark": "PNG output path",
+  "dtx.output_watermark": "Output path",
+  "dtx.output_format": "Output format",
+  "dtx.indexed_bmp": "Indexed BMP",
+  "dtx.max_edge_label": "Max edge",
+  "dtx.max_edge_unit": "px (0=no limit)",
   "about.link": "https://github.com/GAYd0N/LtbToSmd",
   "about.language": "Language",
   "language.zh_cn": "中文",

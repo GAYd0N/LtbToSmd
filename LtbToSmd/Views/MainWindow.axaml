@@ -167,12 +167,21 @@
 								</TextBox.Styles>
 							</TextBox>
 
-							<!-- 按钮 -->
-							<StackPanel Grid.Row="1"
-										Orientation="Horizontal"
-										HorizontalAlignment="Right"
-										Spacing="10">
+							<!-- 底部：复选框 + 按钮 -->
+							<Grid Grid.Row="1" ColumnDefinitions="Auto, *">
+								<CheckBox Grid.Column="0"
+										  IsChecked="{CompiledBinding IsAutoScroll}"
+										  Content="{CompiledBinding Localized_AutoScroll}"
+										  VerticalAlignment="Center"
+										  Margin="0,0,8,0"
+										  FontSize="12"/>
+								<StackPanel Grid.Column="1"
+											Orientation="Horizontal"
+											HorizontalAlignment="Right"
+											Spacing="10">
 								<Button Content="{CompiledBinding Localized_BtnCancel}"
+										Command="{CompiledBinding CancelConvertCommand}"
+										IsEnabled="{CompiledBinding IsConverting}"
 										FontSize="14"
 										Height="36"
 										Width="120"
@@ -197,7 +206,8 @@
 										</Style>
 									</Button.Styles>
 								</Button>
-							</StackPanel>
+								</StackPanel>
+							</Grid>
 
 						</Grid>
 					</Border>
@@ -261,59 +271,141 @@
 					</Grid>
 				</Border>
 
-				<!-- 日志区域 -->
-				<Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
-						CornerRadius="8"
-						BorderThickness="1"
-						BorderBrush="#E0E0E0"
-						Padding="12"
-						Grid.Row="1"
-						Margin="0, 10, 0, 0">
-					<Grid RowDefinitions="*, Auto">
+				<!-- 配置区域 + 日志区域 -->
+				<Grid Grid.Row="1" ColumnDefinitions="260, *" Margin="0, 10, 0, 0">
 
-						<!-- 日志文本框 -->
-						<TextBox Watermark="{CompiledBinding Localized_LogWatermark}"
-								 Text="{Binding LogText}"
-								 IsReadOnly="True"
-								 TextWrapping="Wrap"
-								 Grid.Row="0"
-								 Margin="0, 0, 0, 8">
-							<TextBox.Styles>
-								<Style Selector="TextBox /template/ Border#border">
-									<Setter Property="Background" Value="White"/>
-									<Setter Property="CornerRadius" Value="6"/>
-								</Style>
-							</TextBox.Styles>
-						</TextBox>
+					<!-- 左侧：转换选项 -->
+					<Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+							CornerRadius="8"
+							BorderThickness="1"
+							BorderBrush="#E0E0E0"
+							Padding="12"
+							Grid.Column="0"
+							Margin="0, 0, 5, 0">
+						<StackPanel Spacing="0">
+							<TextBlock Text="{CompiledBinding Localized_ConfigOptions}"
+									   FontWeight="Bold"
+									   FontSize="14"
+									   Margin="0, 0, 0, 8"
+									   Foreground="{DynamicResource SystemAccentColor}"/>
 
-						<!-- 转换按钮 -->
-						<StackPanel Grid.Row="1"
-									Orientation="Horizontal"
-									HorizontalAlignment="Right"
-									Spacing="10">
-							<Button Content="{CompiledBinding Localized_BtnConvert}"
-									Command="{CompiledBinding DtxStartConvertCommand}"
-									IsEnabled="{CompiledBinding DtxIsAllowConvert}"
-									FontSize="14"
-									Height="36"
-									Width="140"
-									VerticalContentAlignment="Center"
-									HorizontalContentAlignment="Center"
-									Background="{DynamicResource SystemAccentColor}"
-									Foreground="White">
-								<Button.Styles>
-									<Style Selector="Button:pointerover">
-										<Setter Property="Opacity" Value="0.85"/>
-									</Style>
-									<Style Selector="Button:disabled">
-										<Setter Property="Opacity" Value="0.5"/>
-									</Style>
-								</Button.Styles>
-							</Button>
+							<!-- 输出格式 -->
+							<TextBlock Text="{CompiledBinding Localized_DtxOutputFormat}"
+									   FontSize="13"
+									   Margin="0, 0, 0, 4"/>
+							<ComboBox ItemsSource="{CompiledBinding DtxFormatItems}"
+									  SelectedIndex="{CompiledBinding DtxSelectedFormatIndex}"
+									  Width="140"
+									  HorizontalAlignment="Left"
+									  Margin="0, 0, 0, 8"/>
+
+							<!-- BMP 索引色 -->
+							<CheckBox IsChecked="{CompiledBinding DtxIsIndexedBmp}"
+									  IsEnabled="{CompiledBinding DtxIsBmpSelected}"
+									  Margin="0, 4"
+									  FontSize="13">
+								<TextBlock Text="{CompiledBinding Localized_DtxIndexedBmp}" />
+							</CheckBox>
+
+							<!-- 最大边长 -->
+							<TextBlock Text="{CompiledBinding Localized_DtxMaxEdgeLabel}"
+									   FontSize="13"
+									   Margin="0, 0, 0, 4"/>
+							<StackPanel Orientation="Horizontal" Spacing="6">
+								<NumericUpDown Value="{CompiledBinding DtxMaxEdgeLength}"
+											   Minimum="0"
+											   Maximum="16384"
+											   Increment="256"
+											   Width="120"
+											   HorizontalAlignment="Left"/>
+								<TextBlock Text="{CompiledBinding Localized_DtxMaxEdgeUnit}"
+										   VerticalAlignment="Center"
+										   FontSize="13"/>
+							</StackPanel>
+
+							<Separator Margin="0, 8" Background="#E0E0E0"/>
+
+							<!-- 自动创建输出文件夹 -->
+							<CheckBox IsChecked="{CompiledBinding DtxIsCreateOutputFolder}"
+									  Margin="0, 4"
+									  FontSize="13">
+								<TextBlock Text="{CompiledBinding Localized_ConfigAutoCreateOutput}" />
+							</CheckBox>
 						</StackPanel>
+					</Border>
 
-					</Grid>
-				</Border>
+					<!-- 右侧：日志输出 + 按钮 -->
+					<Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+							CornerRadius="8"
+							BorderThickness="1"
+							BorderBrush="#E0E0E0"
+							Padding="12"
+							Grid.Column="1"
+							Margin="5, 0, 0, 0">
+						<Grid RowDefinitions="*, Auto">
+
+							<!-- 日志文本框 -->
+							<TextBox x:Name="DtxLogTextBox"
+									 Watermark="{CompiledBinding Localized_LogWatermark}"
+									 Text="{Binding LogText}"
+									 IsReadOnly="True"
+									 TextWrapping="Wrap"
+									 Grid.Row="0"
+									 Margin="0, 0, 0, 8">
+								<TextBox.Styles>
+									<Style Selector="TextBox /template/ Border#border">
+										<Setter Property="Background" Value="White"/>
+										<Setter Property="CornerRadius" Value="6"/>
+									</Style>
+								</TextBox.Styles>
+							</TextBox>
+
+							<!-- 底部：复选框 + 按钮 -->
+							<Grid Grid.Row="1" ColumnDefinitions="Auto, *">
+								<CheckBox Grid.Column="0"
+										  IsChecked="{CompiledBinding IsAutoScroll}"
+										  Content="{CompiledBinding Localized_AutoScroll}"
+										  VerticalAlignment="Center"
+										  Margin="0,0,8,0"
+										  FontSize="12"/>
+								<StackPanel Grid.Column="1"
+											Orientation="Horizontal"
+											HorizontalAlignment="Right"
+											Spacing="10">
+								<Button Content="{CompiledBinding Localized_BtnCancel}"
+										IsEnabled="{CompiledBinding DtxIsConverting}"
+										Command="{CompiledBinding DtxCancelConvertCommand}"
+										FontSize="14"
+										Height="36"
+										Width="120"
+										VerticalContentAlignment="Center"
+										HorizontalContentAlignment="Center"/>
+								<Button Content="{CompiledBinding Localized_BtnConvert}"
+										Command="{CompiledBinding DtxStartConvertCommand}"
+										IsEnabled="{CompiledBinding DtxIsAllowConvert}"
+										FontSize="14"
+										Height="36"
+										Width="140"
+										VerticalContentAlignment="Center"
+										HorizontalContentAlignment="Center"
+										Background="{DynamicResource SystemAccentColor}"
+										Foreground="White">
+									<Button.Styles>
+										<Style Selector="Button:pointerover">
+											<Setter Property="Opacity" Value="0.85"/>
+										</Style>
+										<Style Selector="Button:disabled">
+											<Setter Property="Opacity" Value="0.5"/>
+										</Style>
+									</Button.Styles>
+								</Button>
+								</StackPanel>
+							</Grid>
+
+						</Grid>
+					</Border>
+
+				</Grid>
 
 			</Grid>
 		</TabItem>
