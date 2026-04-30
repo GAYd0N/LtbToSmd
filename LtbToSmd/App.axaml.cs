@@ -26,15 +26,19 @@ namespace LtbToSmd
                 // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
                 // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
                 DisableAvaloniaDataAnnotationValidation();
-                desktop.MainWindow = new MainWindow
-                {
-                    DataContext = new MainWindowViewModel(),
-                };
+
                 var services = new ServiceCollection();
 
-                services.AddSingleton<IFilesService>(x => new FilesService(desktop.MainWindow));
+                services.AddSingleton<ILocalizationService, LocalizationService>();
+                services.AddSingleton<IFilesService>(x => new FilesService(desktop.MainWindow, x.GetRequiredService<ILocalizationService>()));
 
                 Services = services.BuildServiceProvider();
+
+                var localization = Services.GetRequiredService<ILocalizationService>();
+                desktop.MainWindow = new MainWindow
+                {
+                    DataContext = new MainWindowViewModel(localization),
+                };
             }
 
             base.OnFrameworkInitializationCompleted();

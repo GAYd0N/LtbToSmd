@@ -1,7 +1,9 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
+using LtbToSmd.Services;
 using LtbToSmd.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LtbToSmd
 {
@@ -21,7 +23,9 @@ namespace LtbToSmd
                 return (Control)Activator.CreateInstance(type)!;
             }
 
-            return new TextBlock { Text = "Not Found: " + name };
+            var localization = App.Current?.Services?.GetRequiredService<ILocalizationService>();
+            var msg = localization?.GetFormatted("viewlocator.not_found", name) ?? "Not Found: " + name;
+            return new TextBlock { Text = msg };
         }
 
         public bool Match(object? data)

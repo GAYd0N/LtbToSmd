@@ -3,34 +3,46 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LtbToSmd.Services;
 
 public class FilesService : IFilesService
 {
     private readonly Window _target;
+    private readonly ILocalizationService _localization;
 
-    public FilesService(Window target)
+    public FilesService(Window target) : this(target, CreateDefaultLocalization())
+    {
+    }
+
+    public FilesService(Window target, ILocalizationService localization)
     {
         _target = target;
+        _localization = localization;
+    }
+
+    private static ILocalizationService CreateDefaultLocalization()
+    {
+        return App.Current?.Services?.GetRequiredService<ILocalizationService>() ?? new LocalizationService();
     }
 
     public async Task<IStorageFile?> OpenFileAsync()
     {
         var fileTypes = new List<FilePickerFileType>
             {
-                new FilePickerFileType("LTB model")
+                new FilePickerFileType(_localization["filter.ltb_model"])
                 {
                     Patterns = new[] { "*.ltb" }
                 },
-                new FilePickerFileType("DTX image")
+                new FilePickerFileType(_localization["filter.dtx_image"])
                 {
                     Patterns = new[] { "*.dtx"}
                 }
             };
         var files = await _target.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
         {
-            Title = "Open File",
+            Title = _localization["dialog.open_file"],
             AllowMultiple = true,
             FileTypeFilter = fileTypes
         });
@@ -42,7 +54,7 @@ public class FilesService : IFilesService
     {
         var folder = await _target.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions()
         {
-            Title = "Open Folder",
+            Title = _localization["dialog.open_folder"],
             AllowMultiple = false
         });
 

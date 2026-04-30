@@ -68,22 +68,22 @@ namespace LtbToSmd.Services
             FileStream fileStream = new FileStream(cur_fPath + "\\" + fname + ".ltb", FileMode.Open);
             m_LTBFile = new BinaryReader(fileStream);
             // 从文件中读取数据
-            PrintLog("Read data from the file: " + fname + ".ltb\n");
+            PrintLog(m_Logger.GetString("msg.read_data", fname));
 
             int Check_header = m_LTBFile.ReadUInt16(); m_LTBFile.ReadUInt16();
             m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32(); m_LTBFile.ReadUInt32();
             // 检查文件类型
-            PrintLog("Check file type\n");
+            PrintLog(m_Logger.GetString("msg.check_file_type"));
             bool is_tmp = false;
             if (Check_header > 20)
             {
                 m_LTBFile.Close();
-                PrintLog("File pack lmza\n");
-                PrintLog("进行解压缩\n");
+                PrintLog(m_Logger.GetString("msg.file_pack_lmza"));
+                PrintLog(m_Logger.GetString("msg.decompressing"));
                 Decompress_file(file, "___tmp.tmp");
                 is_tmp = true;
                 //重新读取文件
-                PrintLog("重新读取文件\n");
+                PrintLog(m_Logger.GetString("msg.reread_file"));
                 fileStream = new FileStream("___tmp.tmp", FileMode.Open);
                 m_LTBFile = new BinaryReader(fileStream);
 
@@ -103,8 +103,8 @@ namespace LtbToSmd.Services
             m_LTBFile.ReadUInt32();
             numMesh = m_LTBFile.ReadUInt32();
             // version文件版本
-            PrintLog("File version: " + version + "\n");
-            PrintLog("Initialize the storage variable\n");
+            PrintLog(m_Logger.GetString("msg.file_version", version.ToString()));
+            PrintLog(m_Logger.GetString("msg.init_storage"));
 
             m_MeshData = new();
             m_BoneData = new();
@@ -112,17 +112,17 @@ namespace LtbToSmd.Services
             // 检查是否取消
             if (token.IsCancellationRequested)
             {
-                PrintLog("Cancellation detected. Exiting...");
+                PrintLog(m_Logger.GetString("msg.cancellation_detected"));
                 token.ThrowIfCancellationRequested(); // 抛出 OperationCanceledException
             }
 
             //提取基础数据
-            PrintLog("Extract basic data");
+            PrintLog(m_Logger.GetString("msg.extract_basic_data"));
             Parse_mesh(m_LTBFile, numMesh);
             numMesh = totalmesh;
             if (IsConverting == false)
             {
-                PrintLog("不支持此文件类型\n");
+                PrintLog(m_Logger.GetString("msg.unsupported_type"));
                 m_LTBFile.Close();
                 return;
             }
@@ -131,17 +131,17 @@ namespace LtbToSmd.Services
 
             if (token.IsCancellationRequested)
             {
-                PrintLog("Cancellation detected. Exiting...");
+                PrintLog(m_Logger.GetString("msg.cancellation_detected"));
                 token.ThrowIfCancellationRequested();
             }
             //基础计算
-            PrintLog("Basic calculation\n");
+            PrintLog(m_Logger.GetString("msg.basic_calculation"));
             Clac_Par_Bone();
 
             if (IsExtractAnimEnabled == true)
             {
                 //检查动画
-                PrintLog("Check the animation\n");
+                PrintLog(m_Logger.GetString("msg.check_animation"));
                 if (m_LTBFile.BaseStream.Length - m_LTBFile.BaseStream.Position < 2048) IsAnim = false;
                 else IsAnim = true;
                 //  isAnim = false;
@@ -150,20 +150,20 @@ namespace LtbToSmd.Services
                     //提取动画数据
                     Parse_animation(m_LTBFile);
                     //有N个动画
-                    PrintLog(numAnim + "个动画\n");
+                    PrintLog(m_Logger.GetString("msg.num_anims", numAnim.ToString()));
                 }
                 else //无法从此文件中提取动画
-                    PrintLog("无法从此文件中提取动画\n");
+                    PrintLog(m_Logger.GetString("msg.cannot_extract_anim"));
             }
             else IsAnim = false;
 
             if (token.IsCancellationRequested)
             {
-                PrintLog("Cancellation detected. Exiting...");
+                PrintLog(m_Logger.GetString("msg.cancellation_detected"));
                 token.ThrowIfCancellationRequested();
             }
             //将网格写入文件
-            PrintLog("将网格写入文件: " + fname + ".smd\n");
+            PrintLog(m_Logger.GetString("msg.writing_mesh", fname));
 
             calc_databone();
             //get_new_bone_out_data(0, 0, 1.0f, 1.0f, 0.65f);
@@ -176,19 +176,19 @@ namespace LtbToSmd.Services
                 {
                     //将动画写入文件
                     Write_SMD_ANIM(i, gPath + m_AnimData[i].name + ".smd");
-                    PrintLog("将动画: " + m_AnimData[i].name + " 写入文件: " + m_AnimData[i].name + ".smd\n");
+                    PrintLog(m_Logger.GetString("msg.writing_anim", m_AnimData[i].name));
                 }
             }
 
             if (IsGenerateQCEnabled == true && IsAnim == true)
             {
                 //创建QC文件
-                PrintLog("创建QC文件: " + fname + ".qc\n");
+                PrintLog(m_Logger.GetString("msg.creating_qc", fname));
                 Write_QC(gPath + fname + ".qc", fname);
             }
 
             //转换完成
-            PrintLog("转换完成\n");
+            PrintLog(m_Logger.GetString("msg.conversion_complete"));
             m_LTBFile.Close();
             if (is_tmp == true) File.Delete("___tmp.tmp");
 
@@ -1211,14 +1211,14 @@ namespace LtbToSmd.Services
                     byte[] properties = new byte[5];
                     if (input.Read(properties, 0, 5) != 5)
                     {
-                        throw new Exception("输入文件已损坏：无法读取 LZMA 属性头。");
+                        throw new Exception(m_Logger.GetString("msg.file_corrupt_header"));
                     }
 
                     // 读取未压缩文件的大小（8 字节）
                     byte[] fileLengthBytes = new byte[8];
                     if (input.Read(fileLengthBytes, 0, 8) != 8)
                     {
-                        throw new Exception("输入文件已损坏：无法读取未压缩文件大小。");
+                        throw new Exception(m_Logger.GetString("msg.file_corrupt_size"));
                     }
                     long fileLength = BitConverter.ToInt64(fileLengthBytes, 0);
 
@@ -1233,12 +1233,12 @@ namespace LtbToSmd.Services
                     }
                 }
 
-                Console.WriteLine("文件解压完成！");
+                Console.WriteLine(m_Logger.GetString("msg.decompress_success"));
                 return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine("解压失败：" + ex.Message);
+                Console.WriteLine(m_Logger.GetString("msg.decompress_fail", ex.Message));
                 return false;
             }
         }

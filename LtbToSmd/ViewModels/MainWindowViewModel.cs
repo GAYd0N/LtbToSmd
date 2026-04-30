@@ -10,6 +10,9 @@ using LtbToSmd.Services;
 using Avalonia.Platform.Storage;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Globalization;
+using System.Linq;
 
 
 namespace LtbToSmd.ViewModels
@@ -17,12 +20,120 @@ namespace LtbToSmd.ViewModels
     public partial class MainWindowViewModel : ViewModelBase, ILogger, ILtbConversionConfig
     {
         private readonly LtbModel m_LtbModel;
+        private readonly ILocalizationService _localization;
 
-        public MainWindowViewModel()
+        public MainWindowViewModel() : this(CreateDefaultLocalization())
         {
+        }
+
+        public MainWindowViewModel(ILocalizationService localization)
+        {
+            _localization = localization;
+            _localization.PropertyChanged += OnLocalizationChanged;
             m_LtbModel = new LtbModel(this, this);
             m_inputFiles = new List<string>();
+            _languageItems = new ObservableCollection<LanguageItem>
+            {
+                new("中文", "zh-CN"),
+                new("English", "en-US"),
+            };
+            _selectedLanguage = _languageItems.FirstOrDefault(l => l.Code == _localization.CurrentCulture.Name)
+                                ?? _languageItems[0];
         }
+
+        private static ILocalizationService CreateDefaultLocalization()
+        {
+            var services = App.Current?.Services;
+            return services?.GetRequiredService<ILocalizationService>() ?? new LocalizationService();
+        }
+
+        private void OnLocalizationChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ILocalizationService.CurrentCulture))
+            {
+                RefreshAllLocalizedProperties();
+                OnPropertyChanged(nameof(CurrentLanguage));
+            }
+        }
+
+        private void RefreshAllLocalizedProperties()
+        {
+            OnPropertyChanged(nameof(Localized_Title));
+            OnPropertyChanged(nameof(Localized_TabLtb2Smd));
+            OnPropertyChanged(nameof(Localized_TabDtx2Png));
+            OnPropertyChanged(nameof(Localized_TabAbout));
+            OnPropertyChanged(nameof(Localized_InputFile));
+            OnPropertyChanged(nameof(Localized_InputFolder));
+            OnPropertyChanged(nameof(Localized_InputWatermark));
+            OnPropertyChanged(nameof(Localized_BtnBrowse));
+            OnPropertyChanged(nameof(Localized_OutputLabel));
+            OnPropertyChanged(nameof(Localized_OutputWatermark));
+            OnPropertyChanged(nameof(Localized_ConfigSeparateArm));
+            OnPropertyChanged(nameof(Localized_ConfigSeparateSmd));
+            OnPropertyChanged(nameof(Localized_ConfigExtractAnim));
+            OnPropertyChanged(nameof(Localized_ConfigForceAnimOrigin));
+            OnPropertyChanged(nameof(Localized_ConfigGenerateQC));
+            OnPropertyChanged(nameof(Localized_ConfigAutoCreateOutput));
+            OnPropertyChanged(nameof(Localized_ConfigSeparateFolder));
+            OnPropertyChanged(nameof(Localized_LogWatermark));
+            OnPropertyChanged(nameof(Localized_BtnConvert));
+            OnPropertyChanged(nameof(Localized_BtnCancel));
+            OnPropertyChanged(nameof(Localized_DtxWip));
+            OnPropertyChanged(nameof(Localized_AboutLink));
+            OnPropertyChanged(nameof(Localized_AboutLanguage));
+        }
+
+        // ---- Localized properties ----
+        public string Localized_Title => _localization["window.title"];
+        public string Localized_TabLtb2Smd => _localization["tab.ltb2smd"];
+        public string Localized_TabDtx2Png => _localization["tab.dtx2png"];
+        public string Localized_TabAbout => _localization["tab.about"];
+        public string Localized_InputFile => _localization["input.file"];
+        public string Localized_InputFolder => _localization["input.folder"];
+        public string Localized_InputWatermark => _localization["input.watermark"];
+        public string Localized_BtnBrowse => _localization["browse"];
+        public string Localized_OutputLabel => _localization["output.folder_label"];
+        public string Localized_OutputWatermark => _localization["output.watermark"];
+        public string Localized_ConfigSeparateArm => _localization["config.separate_arm"];
+        public string Localized_ConfigSeparateSmd => _localization["config.separate_smd"];
+        public string Localized_ConfigExtractAnim => _localization["config.extract_anim"];
+        public string Localized_ConfigForceAnimOrigin => _localization["config.force_anim_origin"];
+        public string Localized_ConfigGenerateQC => _localization["config.generate_qc"];
+        public string Localized_ConfigAutoCreateOutput => _localization["config.auto_create_output"];
+        public string Localized_ConfigSeparateFolder => _localization["config.separate_folder_per_ltb"];
+        public string Localized_LogWatermark => _localization["log.watermark"];
+        public string Localized_BtnConvert => _localization["convert.button"];
+        public string Localized_BtnCancel => _localization["cancel.button"];
+        public string Localized_DtxWip => _localization["dtx.wip"];
+        public string Localized_AboutLink => _localization["about.link"];
+        public string Localized_AboutLanguage => _localization["about.language"];
+
+        // ---- Language switching ----
+        public class LanguageItem
+        {
+            public string Display { get; }
+            public string Code { get; }
+            public LanguageItem(string display, string code) { Display = display; Code = code; }
+        }
+
+        [ObservableProperty]
+        private ObservableCollection<LanguageItem> _languageItems;
+
+        [ObservableProperty]
+        private LanguageItem? _selectedLanguage;
+
+        partial void OnSelectedLanguageChanged(LanguageItem? value)
+        {
+            if (value is null) return;
+            _localization.CurrentCulture = new CultureInfo(value.Code);
+            OnPropertyChanged(nameof(CurrentLanguage));
+        }
+
+        public string CurrentLanguage => _localization.CurrentCulture.Name switch
+        {
+            "zh-CN" => "中文",
+            _ => "English"
+        };
 
         bool ILtbConversionConfig.IsBatch => SelectedInputType == InputPathType.PATH;
 
@@ -35,6 +146,11 @@ namespace LtbToSmd.ViewModels
         public void PrintLog(string log)
         {
             LogText += ("[" + DateTime.Now.ToString("HH:mm:ss:ff") + "]" + log.TrimEnd('\n', '\r') + Environment.NewLine);
+        }
+
+        string ILogger.GetString(string key, params object?[] args)
+        {
+            return _localization.GetFormatted(key, args);
         }
 
         public void ClearLog()
@@ -162,8 +278,8 @@ namespace LtbToSmd.ViewModels
                     if (file is null) return;
 
                     InputPath = file.TryGetLocalPath();
-                    PrintLog("Input file: " + file.Path);
-                    
+                    PrintLog(((ILogger)this).GetString("msg.input_file", file.Path));
+
                 }
                 else if (SelectedInputType == InputPathType.PATH)
                 {
@@ -171,7 +287,7 @@ namespace LtbToSmd.ViewModels
                     if (folder is null) return;
 
                     InputPath = folder.TryGetLocalPath();
-                    PrintLog("Input folder: " + folder.Path);
+                    PrintLog(((ILogger)this).GetString("msg.input_folder", folder.Path));
                 }
             }
             catch (Exception e)
@@ -193,7 +309,7 @@ namespace LtbToSmd.ViewModels
                 if (folder is null) return;
 
                 OutputPath = folder.TryGetLocalPath();
-                PrintLog("Output folder: " + folder.Path);
+                PrintLog(((ILogger)this).GetString("msg.output_folder", folder.Path));
                 OnInputPathChanged(OutputPath);
             }
             catch (Exception e)
@@ -246,7 +362,7 @@ namespace LtbToSmd.ViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine("加载文件名时出错: " + ex.Message);
+                Console.WriteLine(((ILogger)this).GetString("msg.load_error", ex.Message));
             }
         }
         #endregion
@@ -289,7 +405,7 @@ namespace LtbToSmd.ViewModels
             m_inputFiles.Clear();
             if (string.IsNullOrEmpty(InputPath))
             {
-                PrintLog("Please select a file or folder first.");
+                PrintLog(((ILogger)this).GetString("msg.select_first"));
                 return;
             }
             IsAllowChangeInput = false;
@@ -299,13 +415,13 @@ namespace LtbToSmd.ViewModels
             int fileCount = m_inputFiles.Count;
             if (fileCount == 0)
             {
-                PrintLog("No .ltb files found in the input folder.");
+                PrintLog(((ILogger)this).GetString("msg.no_ltb_files"));
                 return;
             }
             IsConverting = true;
             foreach (var file in m_inputFiles)
             {
-                PrintLog("Converting " + file + "...");
+                PrintLog(((ILogger)this).GetString("msg.converting", file));
                 ConvertToSmd(file, _cts.Token);
             }
             IsAllowChangeInput = true;

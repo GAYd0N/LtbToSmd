@@ -1,0 +1,71 @@
+{
+  "window.title": "LtbToSmd",
+  "tab.ltb2smd": "LTB2SMD",
+  "tab.dtx2png": "DTX2PNG",
+  "tab.about": "About",
+
+  "input.file": "Input file",
+  "input.folder": "Input folder",
+  "input.watermark": "Drag and drop file/folder (.LTB)",
+  "browse": "Browse",
+
+  "output.folder_label": "Output folder:",
+  "output.watermark": "Output path",
+
+  "config.separate_arm": "Separate arm",
+  "config.separate_smd": "Split SMD",
+  "config.extract_anim": "Extract animation",
+  "config.force_anim_origin": "Force anim origin",
+  "config.generate_qc": "Generate QC",
+  "config.auto_create_output": "Auto create output folder",
+  "config.separate_folder_per_ltb": "Separate folder per LTB",
+
+  "log.watermark": "Output log",
+
+  "convert.button": "Convert LTB & Save",
+  "cancel.button": "Cancel",
+
+  "dtx.wip": "WIP",
+  "about.link": "https://github.com/GAYd0N/LtbToSmd",
+  "about.language": "Language",
+  "language.zh_cn": "中文",
+  "language.en_us": "English",
+
+  "msg.input_file": "Input file: {0}",
+  "msg.input_folder": "Input folder: {0}",
+  "msg.output_folder": "Output folder: {0}",
+  "msg.select_first": "Please select a file or folder first.",
+  "msg.no_ltb_files": "No .ltb files found in the input folder.",
+  "msg.converting": "Converting {0}...",
+  "msg.load_error": "Load file list error: {0}",
+
+  "msg.read_data": "Read data from the file: {0}.ltb",
+  "msg.check_file_type": "Check file type",
+  "msg.file_pack_lmza": "File pack lmza",
+  "msg.decompressing": "Decompressing...",
+  "msg.reread_file": "Re-reading file",
+  "msg.file_version": "File version: {0}",
+  "msg.init_storage": "Initialize the storage variable",
+  "msg.cancellation_detected": "Cancellation detected. Exiting...",
+  "msg.extract_basic_data": "Extract basic data",
+  "msg.unsupported_type": "Unsupported file type",
+  "msg.basic_calculation": "Basic calculation",
+  "msg.check_animation": "Check the animation",
+  "msg.num_anims": "{0} animations",
+  "msg.cannot_extract_anim": "Cannot extract animation from this file",
+  "msg.writing_mesh": "Writing mesh to file: {0}.smd",
+  "msg.writing_anim": "Writing animation: {0} to file: {0}.smd",
+  "msg.creating_qc": "Creating QC file: {0}.qc",
+  "msg.conversion_complete": "Conversion complete",
+  "msg.decompress_success": "Decompression complete!",
+  "msg.decompress_fail": "Decompression failed: {0}",
+  "msg.file_corrupt_header": "Input file is corrupted: unable to read LZMA properties header.",
+  "msg.file_corrupt_size": "Input file is corrupted: unable to read uncompressed file size.",
+
+  "filter.ltb_model": "LTB model",
+  "filter.dtx_image": "DTX image",
+  "dialog.open_file": "Open File",
+  "dialog.open_folder": "Open Folder",
+
+  "viewlocator.not_found": "Not Found: {0}"
+}
