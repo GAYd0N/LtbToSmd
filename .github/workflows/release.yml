@@ -1,0 +1,70 @@
+name: Build and Release
+
+on:
+  push:
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Extract version from tag
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          echo "VERSION=$v" >> "$GITHUB_ENV"
+
+      # ---------- win-x64 ----------
+      - name: Publish win-x64 (singlefile)
+        run: dotnet publish LtbToSmd/LtbToSmd.csproj -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:DebugType=None -p:DebugSymbols=false
+          -p:Version=${{ env.VERSION }} -p:AssemblyVersion=${{ env.VERSION }}
+          -o publish/singlefile/win-x64
+
+      - name: Publish win-x64 (normal)
+        run: dotnet publish LtbToSmd/LtbToSmd.csproj -c Release -r win-x64 --self-contained true
+          -p:DebugType=None -p:DebugSymbols=false
+          -p:Version=${{ env.VERSION }} -p:AssemblyVersion=${{ env.VERSION }}
+          -o publish/normal/win-x64
+
+      - name: Package win-x64 zips
+        run: |
+          zip -j "LtbToSmd-v${VERSION}-win-x64-singlefile.zip" publish/singlefile/win-x64/*
+          zip -j "LtbToSmd-v${VERSION}-win-x64.zip" publish/normal/win-x64/*
+
+      # ---------- linux-x64 ----------
+      - name: Publish linux-x64 (singlefile)
+        run: dotnet publish LtbToSmd/LtbToSmd.csproj -c Release -r linux-x64 --self-contained true
+          -p:PublishSingleFile=true
+          -p:DebugType=None -p:DebugSymbols=false
+          -p:Version=${{ env.VERSION }} -p:AssemblyVersion=${{ env.VERSION }}
+          -o publish/singlefile/linux-x64
+
+      - name: Publish linux-x64 (normal)
+        run: dotnet publish LtbToSmd/LtbToSmd.csproj -c Release -r linux-x64 --self-contained true
+          -p:DebugType=None -p:DebugSymbols=false
+          -p:Version=${{ env.VERSION }} -p:AssemblyVersion=${{ env.VERSION }}
+          -o publish/normal/linux-x64
+
+      - name: Package linux-x64 zips
+        run: |
+          zip -j "LtbToSmd-v${VERSION}-linux-x64-singlefile.zip" publish/singlefile/linux-x64/*
+          zip -j "LtbToSmd-v${VERSION}-linux-x64.zip" publish/normal/linux-x64/*
+
+      # ---------- Release ----------
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: LtbToSmd-v*.zip
+          generate_release_notes: true
+          name: LtbToSmd ${{ github.ref_name }}
+          fail_on_unmatched_files: true
